@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-type WikipediaHandler func(w http.ResponseWriter, res []byte)
+type WikipediaHandler func(w http.ResponseWriter, r *http.Request, res []byte)
 
 func handleWikipedia(w http.ResponseWriter, r *http.Request, targetUrl string, handler WikipediaHandler) {
 	param := NewParameter(r)
@@ -28,13 +28,13 @@ func handleWikipedia(w http.ResponseWriter, r *http.Request, targetUrl string, h
 			go wiki.getDoc(param.Language, translatedText, chBytes)
 			res = <-chBytes
 			if res != nil {
-				handler(w, res)
+				handler(w, r, res)
 			} else {
 				chBytes = make(chan []byte)
 				go wiki.getDoc("en", param.Keyword, chBytes)
 				res = <-chBytes
 				if res != nil {
-					handler(w, res)
+					handler(w, r, res)
 				} else {
 					NewStatus(w, "noid", StatusRequestUnsuccessfully, fmt.Sprintf("language: %s, keyword: %s", param.Language, param.Keyword)).Succ(appengine.NewContext(r))
 				}
@@ -44,27 +44,32 @@ func handleWikipedia(w http.ResponseWriter, r *http.Request, targetUrl string, h
 			go wiki.getDoc("en", param.Keyword, chBytes)
 			res = <-chBytes
 			if res != nil {
-				handler(w, res)
+				handler(w, r, res)
 			} else {
 				NewStatus(w, "noid", StatusRequestUnsuccessfully, fmt.Sprintf("language: %s, keyword: %s", param.Language, param.Keyword)).Succ(appengine.NewContext(r))
 			}
 		}
 	} else {
-		handler(w, res)
+		handler(w, r, res)
 	}
 }
 
-func outputWikipediaDocument(w http.ResponseWriter, res []byte) {
+func outputWikipediaDocument(w http.ResponseWriter, r *http.Request, res []byte) {
 	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprintf(w, "%s", res)
 }
 
-func outputWikipediaImage(w http.ResponseWriter, res []byte) {
-	w.Header().Set("Content-Type", "application/json")
+func outputWikipediaImage(w http.ResponseWriter, r *http.Request, res []byte) {
+	w.Header().Set("Content-Type", "image/*")
 	repo := new(WikiResult)
 	json.Unmarshal(res, repo)
 	for _, v := range repo.Query.Pages {
-		by, _ := json.Marshal(v)
-		fmt.Fprintf(w, "%s", by)
+		chBytes := make(chan []byte)
+		go  v.Original.get(r, chBytes)
+		bys := <-chBytes
+		if bys != nil {
+			fmt.Fprintf(w, "%s", bys)
+		}
+		return
 	}
 }
