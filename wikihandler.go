@@ -65,10 +65,17 @@ func outputWikipediaImage(w http.ResponseWriter, r *http.Request, res []byte) {
 	json.Unmarshal(res, repo)
 	for _, v := range repo.Query.Pages {
 		chBytes := make(chan []byte)
-		go  v.Original.get(r, chBytes)
+		go v.Original.get(r, chBytes)
 		bys := <-chBytes
 		if bys != nil {
 			fmt.Fprintf(w, "%s", bys)
+		} else {
+			chBytes = make(chan []byte)
+			go v.Thumbnail.get(r, chBytes)
+			bys = <-chBytes
+			if bys != nil {
+				fmt.Fprintf(w, "%s", bys)
+			}
 		}
 		return
 	}
