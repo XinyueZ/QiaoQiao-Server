@@ -14,4 +14,4 @@ handlers:
 
 
 #Deploy for showcase:  goapp serve app.yaml
-#Deploy for live: goapp deploy -application qiaoqiao-dev -version 0
+#Deploy for server: goapp deploy -application qiaoqiao-dev -version 0
