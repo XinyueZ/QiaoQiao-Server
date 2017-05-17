@@ -23,8 +23,33 @@ func newWikipedia(r *http.Request, targetUrl string) (p *Wikipedia) {
 }
 
 func (p *Wikipedia) getDoc(language string, keyword string, response chan []byte) {
-	cxt := appengine.NewContext(p.r)
 	url := fmt.Sprintf("https://%s.wikipedia.org/%s%s", language, p.targetUrl, keyword)
+	get(p.r, url, response)
+}
+
+type WikiResult struct {
+	Query Query `json:"query"`
+}
+
+type Query struct {
+	Pages map[string]Page `json:"pages"`
+}
+
+type Page struct {
+	Thumbnail Image `json:"thumbnail"`
+	Original  Image `json:"original"`
+}
+
+type Image struct {
+	Source string `json:"source"`
+}
+
+func (p *Image) get(r *http.Request, response chan []byte) {
+	get(r, p.Source, response)
+}
+
+func get(r *http.Request, url string, response chan []byte) {
+	cxt := appengine.NewContext(r)
 	if req, err := http.NewRequest("GET", url, nil); err == nil {
 		httpClient := urlfetch.Client(cxt)
 		r, err := httpClient.Do(req)
@@ -49,21 +74,4 @@ func (p *Wikipedia) getDoc(language string, keyword string, response chan []byte
 	} else {
 		response <- nil
 	}
-}
-
-type WikiResult struct {
-	Query Query `json:"query"`
-}
-
-type Query struct {
-	Pages map[string]Page `json:"pages"`
-}
-
-type Page struct {
-	Thumbnail Image `json:"thumbnail"`
-	Original  Image `json:"original"`
-}
-
-type Image struct {
-	Source string `json:"source"`
 }
