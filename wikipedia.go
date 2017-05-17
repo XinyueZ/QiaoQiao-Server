@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"google.golang.org/appengine/log"
 )
 
 type Wikipedia struct {
@@ -23,7 +24,7 @@ func newWikipedia(r *http.Request, targetUrl string) (p *Wikipedia) {
 }
 
 func (p *Wikipedia) getDoc(language string, keyword string, response chan []byte) {
-	url := fmt.Sprintf("https://%s.wikipedia.org/%s%s", language, p.targetUrl, keyword)
+	url := fmt.Sprintf("https://%s.wikipedia.org/%s%s", language, p.targetUrl, strings.Replace(keyword, " ", "_", -1))
 	get(p.r, url, response)
 }
 
@@ -50,6 +51,8 @@ func (p *Image) get(r *http.Request, response chan []byte) {
 
 func get(r *http.Request, url string, response chan []byte) {
 	cxt := appengine.NewContext(r)
+
+	log.Infof(cxt, fmt.Sprintf("get url %s", url))
 	if req, err := http.NewRequest("GET", url, nil); err == nil {
 		httpClient := urlfetch.Client(cxt)
 		r, err := httpClient.Do(req)
@@ -60,9 +63,12 @@ func get(r *http.Request, url string, response chan []byte) {
 			if bytes, err := ioutil.ReadAll(r.Body); err == nil {
 				wikiRes := new(WikiResult)
 				json.Unmarshal(bytes, wikiRes)
-				if strings.Contains(string(bytes), "{\"pages\":{\"-1\"") {
-					response <- nil
-					return
+
+				for k, _ := range wikiRes.Query.Pages {
+					if k == "-1" {
+						response <- nil
+						return
+					}
 				}
 				response <- bytes
 			} else {
