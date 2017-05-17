@@ -8,7 +8,7 @@ import (
 func init() {
 	http.HandleFunc("/", handleRoot)
 	http.HandleFunc("/knowledge/documents/wikipedia", handleDocumentsWikipedia)
-	http.HandleFunc("/knowledge/images/wikipdia", handleImagesWikipedia)
+	http.HandleFunc("/knowledge/images/wikipedia", handleImagesWikipedia)
 }
 
 func handleRoot(w http.ResponseWriter, r *http.Request) {
