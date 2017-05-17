@@ -69,14 +69,24 @@ func outputWikipediaImage(w http.ResponseWriter, r *http.Request, res []byte) {
 		bys := <-chBytes
 		if bys != nil {
 			fmt.Fprintf(w, "%s", bys)
+			return
 		} else {
 			chBytes = make(chan []byte)
 			go v.Thumbnail.get(r, chBytes)
 			bys = <-chBytes
 			if bys != nil {
 				fmt.Fprintf(w, "%s", bys)
+				return
+			} else {
+				chBytes = make(chan []byte)
+				go get(r, defaultImage, chBytes)
+				bys = <-chBytes
+				if bys != nil {
+					fmt.Fprintf(w, "%s", bys)
+					return
+				}
 			}
 		}
-		return
 	}
+	return
 }
