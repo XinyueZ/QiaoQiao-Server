@@ -44,15 +44,13 @@ func handleWikipedia(w http.ResponseWriter, r *http.Request, targetUrl string) {
 			go wiki.getDoc(param.Language, translatedText, chBytes)
 			res = <-chBytes
 			if res != nil {
-				w.Header().Set("Content-Type", "application/json")
-				fmt.Fprintf(w, string(res))
+				outputWikipedia(w, res)
 			} else {
 				chBytes = make(chan []byte)
 				go wiki.getDoc("en", param.Keyword, chBytes)
 				res = <-chBytes
 				if res != nil {
-					w.Header().Set("Content-Type", "application/json")
-					fmt.Fprintf(w, string(res))
+					outputWikipedia(w, res)
 				} else {
 					NewStatus(w, "noid", StatusRequestUnsuccessfully, fmt.Sprintf("language: %s, keyword: %s", param.Language, param.Keyword)).Succ(appengine.NewContext(r))
 				}
@@ -62,14 +60,16 @@ func handleWikipedia(w http.ResponseWriter, r *http.Request, targetUrl string) {
 			go wiki.getDoc("en", param.Keyword, chBytes)
 			res = <-chBytes
 			if res != nil {
-				w.Header().Set("Content-Type", "application/json")
-				fmt.Fprintf(w, string(res))
+				outputWikipedia(w, res)
 			} else {
 				NewStatus(w, "noid", StatusRequestUnsuccessfully, fmt.Sprintf("language: %s, keyword: %s", param.Language, param.Keyword)).Succ(appengine.NewContext(r))
 			}
 		}
 	} else {
-		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, string(res))
+		outputWikipedia(w, res)
 	}
+}
+func outputWikipedia(w http.ResponseWriter, res []byte) (int, error) {
+	w.Header().Set("Content-Type", "application/json")
+	return fmt.Fprintf(w, "%s", res)
 }
