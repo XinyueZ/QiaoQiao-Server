@@ -1,0 +1,17 @@
+application: qiaoqiao-dev
+module: default
+version: 1
+threadsafe: true
+
+runtime: go
+api_version: go1 
+ 
+handlers:
+- url: /.*
+  script: _go_app
+  secure: always
+
+
+
+#Deploy for showcase:  goapp serve app.yaml
+#Deploy for live: goapp deploy -application qiaoqiao-dev -version 0
