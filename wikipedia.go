@@ -1,12 +1,12 @@
 package qiaoqiao
 
 import (
-	"net/http"
-	"google.golang.org/appengine"
+	"encoding/json"
 	"fmt"
+	"google.golang.org/appengine"
 	"google.golang.org/appengine/urlfetch"
 	"io/ioutil"
-	"encoding/json"
+	"net/http"
 	"strings"
 )
 
@@ -56,16 +56,12 @@ type WikiResult struct {
 }
 
 type Query struct {
-	Pages Pages `json:"pages"`
+	Pages map[string]Page `json:"pages"`
 }
 
 type Page struct {
 	Thumbnail Image `json:"thumbnail"`
 	Original  Image `json:"original"`
-}
-
-type Pages struct {
-	Page map[string]Page
 }
 
 type Image struct {

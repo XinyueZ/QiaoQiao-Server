@@ -20,6 +20,6 @@ func handleDocumentsWikipedia(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleImagesWikipedia(w http.ResponseWriter, r *http.Request) {
-	handleWikipedia(w, r, urlWikiImages, outputWikipediaDocument)
+	handleWikipedia(w, r, urlWikiImages, outputWikipediaImage)
 
 }

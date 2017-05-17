@@ -1,10 +1,11 @@
 package qiaoqiao
 
 import (
-	"google.golang.org/appengine"
+	"encoding/json"
 	"fmt"
-	"net/http"
+	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
+	"net/http"
 )
 
 type WikipediaHandler func(w http.ResponseWriter, res []byte)
@@ -56,4 +57,14 @@ func handleWikipedia(w http.ResponseWriter, r *http.Request, targetUrl string, h
 func outputWikipediaDocument(w http.ResponseWriter, res []byte) {
 	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprintf(w, "%s", res)
+}
+
+func outputWikipediaImage(w http.ResponseWriter, res []byte) {
+	w.Header().Set("Content-Type", "application/json")
+	repo := new(WikiResult)
+	json.Unmarshal(res, repo)
+	for _, v := range repo.Query.Pages {
+		by, _ := json.Marshal(v)
+		fmt.Fprintf(w, "%s", by)
+	}
 }
