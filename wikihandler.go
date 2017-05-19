@@ -90,3 +90,16 @@ func outputWikipediaImage(w http.ResponseWriter, r *http.Request, res []byte) {
 	}
 	return
 }
+
+func handleWikipediaGeosearch(w http.ResponseWriter, r *http.Request, targetUrl string, handler WikipediaHandler) {
+	param := NewParameter(r)
+	wiki := newWikipedia(r, targetUrl)
+	chBytes := make(chan []byte)
+	go wiki.getGeosearchList(param.Language, param.Keyword, chBytes)
+	res := <-chBytes
+	if res != nil {
+		handler(w, r, res)
+	} else {
+		NewStatus(w, "noid", StatusRequestUnsuccessfully, fmt.Sprintf("language: %s, keyword: %s", param.Language, param.Keyword)).Succ(appengine.NewContext(r))
+	}
+}

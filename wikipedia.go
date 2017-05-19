@@ -24,7 +24,12 @@ func newWikipedia(r *http.Request, targetUrl string) (p *Wikipedia) {
 }
 
 func (p *Wikipedia) getDoc(language string, keyword string, response chan []byte) {
-	url := fmt.Sprintf("https://%s.wikipedia.org/%s%s", language, p.targetUrl, strings.Replace(keyword, " ", "_", -1))
+	url := fmt.Sprintf(baseWikiUrl, language, p.targetUrl, strings.Replace(keyword, " ", "_", -1))
+	get(p.r, url, response)
+}
+
+func (p *Wikipedia) getGeosearchList(language string, keyword string, response chan []byte) {
+	url := fmt.Sprintf(baseWikiUrl, language, p.targetUrl, keyword)
 	get(p.r, url, response)
 }
 
