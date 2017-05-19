@@ -103,3 +103,16 @@ func handleWikipediaGeosearch(w http.ResponseWriter, r *http.Request, targetUrl 
 		NewStatus(w, "noid", StatusRequestUnsuccessfully, fmt.Sprintf("language: %s, keyword: %s", param.Language, param.Keyword)).Succ(appengine.NewContext(r))
 	}
 }
+
+func handleWikipediaId(w http.ResponseWriter, r *http.Request, targetUrl string, handler WikipediaHandler) {
+	param := NewParameter(r)
+	wiki := newWikipedia(r, targetUrl)
+	chBytes := make(chan []byte)
+	go wiki.getDoc(param.Language, param.Keyword, chBytes)
+	res := <-chBytes
+	if res != nil {
+		handler(w, r, res)
+	} else {
+		NewStatus(w, "noid", StatusRequestUnsuccessfully, fmt.Sprintf("language: %s, keyword: %s", param.Language, param.Keyword)).Succ(appengine.NewContext(r))
+	}
+}
