@@ -1,4 +1,5 @@
 application: qiaoqiao-dev
+#application: qiaoqiao-live
 module: default
 version: 1
 threadsafe: true
@@ -15,3 +16,4 @@ handlers:
 
 #Deploy for showcase:  goapp serve app.yaml
 #Deploy for server: goapp deploy -application qiaoqiao-dev -version 0
+#Deploy for server: goapp deploy -application qiaoqiao-live -version 0
