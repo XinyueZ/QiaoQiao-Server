@@ -91,6 +91,29 @@ func outputWikipediaImage(w http.ResponseWriter, r *http.Request, res []byte) {
 	return
 }
 
+func outputWikipediaThumbnail(w http.ResponseWriter, r *http.Request, res []byte) {
+	w.Header().Set("Content-Type", "image/*")
+	repo := new(WikiResult)
+	json.Unmarshal(res, repo)
+	for _, v := range repo.Query.Pages {
+		chBytes := make(chan []byte)
+		go v.Thumbnail.get(r, chBytes)
+		bys := <-chBytes
+		if bys != nil {
+			fmt.Fprintf(w, "%s", bys)
+			return
+		} else {
+			chBytes = make(chan []byte)
+			go get(r, defaultImage, chBytes)
+			bys = <-chBytes
+			if bys != nil {
+				fmt.Fprintf(w, "%s", bys)
+				return
+			}
+		}
+	}
+}
+
 func handleWikipediaGeosearch(w http.ResponseWriter, r *http.Request, targetUrl string, handler WikipediaHandler) {
 	param := NewParameter(r)
 	wiki := newWikipedia(r, targetUrl)
