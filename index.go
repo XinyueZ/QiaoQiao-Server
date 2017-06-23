@@ -2,14 +2,16 @@ package qiaoqiao
 
 import (
 	"net/http"
+	"fmt"
 )
 
 func init() {
+	http.HandleFunc("/knowledge/images/daily", handleImageDaily)
 	http.HandleFunc("/knowledge/id/wikipedia", handleIdWikipedia)
 	http.HandleFunc("/knowledge/images/wikipedia", handleImagesWikipedia)
-	http.HandleFunc("/knowledge/thumbnails/wikipedia", handleThumbnailsWikipedia)
 	http.HandleFunc("/knowledge/documents/wikipedia", handleDocumentsWikipedia)
 	http.HandleFunc("/knowledge/geosearch/wikipedia", handleGeosearchWikipedia)
+	http.HandleFunc("/knowledge/thumbnails/wikipedia", handleThumbnailsWikipedia)
 }
 
 func handleIdWikipedia(w http.ResponseWriter, r *http.Request) {
@@ -30,4 +32,9 @@ func handleDocumentsWikipedia(w http.ResponseWriter, r *http.Request) {
 
 func handleGeosearchWikipedia(w http.ResponseWriter, r *http.Request) {
 	handleWikipediaGeosearch(w, r, urlWikiGeosearch, outputWikipediaDocument)
+}
+
+func handleImageDaily(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	fmt.Fprintf(w, "{\"creatives\" : [{\"url\" : \"%s\"}]}", "https://www.dujin.org/sys/bing/1366.php")
 }
