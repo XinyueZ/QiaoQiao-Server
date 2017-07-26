@@ -36,5 +36,5 @@ func handleGeosearchWikipedia(w http.ResponseWriter, r *http.Request) {
 
 func handleImageDaily(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	fmt.Fprintf(w, "{\"creatives\" : [{\"url\" : \"%s\"}]}", "https://www.dujin.org/sys/bing/1366.php")
+	fmt.Fprintf(w, "{\"creatives\" : [{\"url\" : \"%s\"}]}", "https://source.unsplash.com/random")
 }
