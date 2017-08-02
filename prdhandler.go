@@ -1,9 +1,12 @@
 package qiaoqiao
 
-import "net/http"
+import (
+	"net/http"
+	"encoding/json"
+	"google.golang.org/appengine"
+)
 
 type ProductHandler func(w http.ResponseWriter, r *http.Request, res []byte)
-
 
 func handleProductUniversalProductCode(w http.ResponseWriter, r *http.Request, targetUrl string, handler ProductHandler) {
 	param := NewParameter(r)
@@ -15,5 +18,11 @@ func handleProductUniversalProductCode(w http.ResponseWriter, r *http.Request, t
 }
 
 func handleEANdata(w http.ResponseWriter, r *http.Request, res []byte) {
-	//TODO Output feed of UPC to client
+	eandata := new(EANdataResult)
+	err := json.Unmarshal(res, eandata)
+	if err == nil {
+		newProductUpcResponse(r, eandata).show(w)
+	} else {
+		NewStatus(w, "noid", StatusRequestUnsuccessfully, "EANdata call fail.").show(appengine.NewContext(r))
+	}
 }

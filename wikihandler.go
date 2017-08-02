@@ -36,7 +36,7 @@ func handleWikipedia(w http.ResponseWriter, r *http.Request, targetUrl string, h
 				if res != nil {
 					handler(w, r, res)
 				} else {
-					NewStatus(w, "noid", StatusRequestUnsuccessfully, fmt.Sprintf("language: %s, keyword: %s", param.Language, param.Keyword)).Succ(appengine.NewContext(r))
+					NewStatus(w, "noid", StatusRequestUnsuccessfully, fmt.Sprintf("language: %s, keyword: %s", param.Language, param.Keyword)).show(appengine.NewContext(r))
 				}
 			}
 		} else {
@@ -46,7 +46,7 @@ func handleWikipedia(w http.ResponseWriter, r *http.Request, targetUrl string, h
 			if res != nil {
 				handler(w, r, res)
 			} else {
-				NewStatus(w, "noid", StatusRequestUnsuccessfully, fmt.Sprintf("language: %s, keyword: %s", param.Language, param.Keyword)).Succ(appengine.NewContext(r))
+				NewStatus(w, "noid", StatusRequestUnsuccessfully, fmt.Sprintf("language: %s, keyword: %s", param.Language, param.Keyword)).show(appengine.NewContext(r))
 			}
 		}
 	} else {
@@ -123,7 +123,7 @@ func handleWikipediaGeosearch(w http.ResponseWriter, r *http.Request, targetUrl 
 	if res != nil {
 		handler(w, r, res)
 	} else {
-		NewStatus(w, "noid", StatusRequestUnsuccessfully, fmt.Sprintf("language: %s, keyword: %s", param.Language, param.Keyword)).Succ(appengine.NewContext(r))
+		NewStatus(w, "noid", StatusRequestUnsuccessfully, fmt.Sprintf("language: %s, keyword: %s", param.Language, param.Keyword)).show(appengine.NewContext(r))
 	}
 }
 
@@ -136,6 +136,6 @@ func handleWikipediaId(w http.ResponseWriter, r *http.Request, targetUrl string,
 	if res != nil {
 		handler(w, r, res)
 	} else {
-		NewStatus(w, "noid", StatusRequestUnsuccessfully, fmt.Sprintf("language: %s, keyword: %s", param.Language, param.Keyword)).Succ(appengine.NewContext(r))
+		NewStatus(w, "noid", StatusRequestUnsuccessfully, fmt.Sprintf("language: %s, keyword: %s", param.Language, param.Keyword)).show(appengine.NewContext(r))
 	}
 }

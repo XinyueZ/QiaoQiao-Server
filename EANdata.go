@@ -8,6 +8,7 @@ type EANdataAttributes struct {
 	LanguageText    string `json:"language_text_long"`
 	Price           string `json:"price_new"`
 	PriceUnit       string `json:"price_new_extra"`
+	Author          string `json:"author"`
 }
 
 type Barcode struct {
@@ -25,14 +26,14 @@ type ENAdataStatus struct {
 
 type Product struct {
 	Attributes EANdataAttributes `json:"attributes"`
-	EAN13      string `json:"EAN13"`
-	ISBN10     string `json:"ISBN10"`
-	Barcode    Barcode `json:"ISBN10"`
-	Image      string `json:"image"`
+	EAN13      string            `json:"EAN13"`
+	ISBN10     string            `json:"ISBN10"`
+	Barcode    Barcode           `json:"barcode"`
+	Image      string            `json:"image"`
 }
 
 type EANdataResult struct {
-	Status  ENAdataStatus `json:"code"`
-	Product Product  `json:"product"`
-	Company Company `json:"company"`
+	Status  ENAdataStatus `json:"status"`
+	Product Product       `json:"product"`
+	Company Company       `json:"company"`
 }

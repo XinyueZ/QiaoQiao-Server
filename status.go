@@ -25,12 +25,8 @@ func NewStatus(w http.ResponseWriter, id string, status int, message string) (r 
 	return
 }
 
-func (p *Status) Err(context context.Context) {
-	p.setupHeader()
-	p.output()
-}
 
-func (p *Status) Succ(context context.Context) {
+func (p *Status) show(context context.Context) {
 	p.setupHeader()
 	p.output()
 }
