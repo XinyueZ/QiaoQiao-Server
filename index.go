@@ -41,5 +41,6 @@ func handleImageDaily(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleProductUpc(w http.ResponseWriter, r *http.Request) {
-	handleProductUniversalProductCode(w, r, eandataUrl, handleEANdata)
+	//handleProductUniversalProductCode(w, r, eandataUrl, handleEANdata, "eandata")
+	handleProductUniversalProductCode(w, r, awsUrl, handleAWS, "aws")
 }

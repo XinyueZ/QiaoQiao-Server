@@ -21,7 +21,7 @@ func newTranslator(r *http.Request) (p *Translator) {
 
 func (p *Translator) get(q string, target string, format string, response chan *Response) {
 	cxt := appengine.NewContext(p.r)
-	url := fmt.Sprintf("https://translation.googleapis.com/language/translate/v2/?q=%s&target=%s&format=%s&key=%s", q, target, format, googleApiKey)
+	url := fmt.Sprintf("https://translation.googleapis.com/language/translate/v2/?q=%s&target=%s&format=%s&key=%s", q, target, format, GOOGLE_API_KEY)
 	if req, err := http.NewRequest("GET", url, nil); err == nil {
 		httpClient := urlfetch.Client(cxt)
 		r, err := httpClient.Do(req)
