@@ -31,5 +31,6 @@ func handleEANdata(w http.ResponseWriter, r *http.Request, res []byte) {
 }
 
 func handleAWS(w http.ResponseWriter, r *http.Request, res []byte) {
+	w.Header().Set("Content-Type", "application/xml")
 	fmt.Fprintf(w, "%s", res)
 }
