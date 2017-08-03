@@ -75,10 +75,6 @@ func newProductUpcItem(result ProductResult, source string) (item *ProductUpcIte
 	item = new(ProductUpcItem)
 	item.Source = source
 	item.Status = result.getStatus()
-	if item.Status == 404 {
-		item.Status = StatusRequestUnsuccessfully
-		return
-	}
 	item.Product = result.getProduct()
 	item.Description = result.getDescription()
 	item.People = result.getPeople()

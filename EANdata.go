@@ -44,13 +44,25 @@ type EANdataResult struct {
 
 func (p *EANdataResult) getStatus() (status int) {
 	status, _ = strconv.Atoi(p.Status.Code)
+	switch status {
+	case 0, 404:
+		status = StatusRequestUnsuccessfully
+	default:
+		status = StatusRequestSuccessfully
+	}
 	return
 }
 
 func (p *EANdataResult) getProduct() string {
+	if p.getStatus() == StatusRequestUnsuccessfully {
+		return ""
+	}
 	return p.Product.Attributes.Product
 }
 func (p *EANdataResult) getDescription() (desc string) {
+	if p.getStatus() == StatusRequestUnsuccessfully {
+		return ""
+	}
 	if p.Product.Attributes.LongDescription != "" {
 		desc = p.Product.Attributes.LongDescription
 	} else {
@@ -59,11 +71,20 @@ func (p *EANdataResult) getDescription() (desc string) {
 	return desc
 }
 func (p *EANdataResult) getPeople() string {
+	if p.getStatus() == StatusRequestUnsuccessfully {
+		return ""
+	}
 	return p.Product.Attributes.Author
 }
 func (p *EANdataResult) getBarcodeUrl() string {
+	if p.getStatus() == StatusRequestUnsuccessfully {
+		return ""
+	}
 	return p.Product.Barcode.Url
 }
 func (p *EANdataResult) getCompany() Company {
+	if p.getStatus() == StatusRequestUnsuccessfully {
+		return Company{"", ""}
+	}
 	return p.Company
 }
