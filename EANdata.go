@@ -1,5 +1,9 @@
 package qiaoqiao
 
+import (
+	"strconv"
+)
+
 type EANdataAttributes struct {
 	Product         string `json:"product"`
 	Description     string `json:"description"`
@@ -36,4 +40,30 @@ type EANdataResult struct {
 	Status  ENAdataStatus `json:"status"`
 	Product Product       `json:"product"`
 	Company Company       `json:"company"`
+}
+
+func (p *EANdataResult) getStatus() (status int) {
+	status, _ = strconv.Atoi(p.Status.Code)
+	return
+}
+
+func (p *EANdataResult) getProduct() string {
+	return p.Product.Attributes.Product
+}
+func (p *EANdataResult) getDescription() (desc string) {
+	if p.Product.Attributes.LongDescription != "" {
+		desc = p.Product.Attributes.LongDescription
+	} else {
+		desc = p.Product.Attributes.Description
+	}
+	return desc
+}
+func (p *EANdataResult) getPeople() string {
+	return p.Product.Attributes.Author
+}
+func (p *EANdataResult) getBarcodeUrl() string {
+	return p.Product.Barcode.Url
+}
+func (p *EANdataResult) getCompany() Company {
+	return p.Company
 }

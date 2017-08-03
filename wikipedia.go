@@ -37,14 +37,14 @@ type Query struct {
 }
 
 type Page struct {
-	Thumbnail Image `json:"thumbnail"`
-	Original  Image `json:"original"`
+	Thumbnail WikiImage `json:"thumbnail"`
+	Original  WikiImage `json:"original"`
 }
 
-type Image struct {
+type WikiImage struct {
 	Source string `json:"source"`
 }
 
-func (p *Image) get(r *http.Request, response chan []byte) {
+func (p *WikiImage) get(r *http.Request, response chan []byte) {
 	get(r, p.Source, response)
 }

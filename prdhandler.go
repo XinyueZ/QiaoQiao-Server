@@ -1,10 +1,10 @@
 package qiaoqiao
 
 import (
-	"net/http"
 	"encoding/json"
 	"google.golang.org/appengine"
-	"fmt"
+	"net/http"
+	"encoding/xml"
 )
 
 type ProductHandler func(w http.ResponseWriter, r *http.Request, res []byte)
@@ -23,14 +23,21 @@ func handleProductUniversalProductCode(w http.ResponseWriter, r *http.Request, t
 func handleEANdata(w http.ResponseWriter, r *http.Request, res []byte) {
 	eandata := new(EANdataResult)
 	err := json.Unmarshal(res, eandata)
-	if err == nil {
-		newProductUpcResponse(r, eandata).show(w)
-	} else {
-		NewStatus(w, "noid", StatusRequestUnsuccessfully, "EANdata call fail.").show(appengine.NewContext(r))
-	}
+	handleData(err, r, newProductUpcItem(eandata, "eandata"), w)
 }
 
 func handleAWS(w http.ResponseWriter, r *http.Request, res []byte) {
-	w.Header().Set("Content-Type", "application/xml")
-	fmt.Fprintf(w, "%s", res)
+	awsLookup := new(ItemLookupResponse)
+	err := xml.Unmarshal(res, awsLookup)
+	handleData(err, r, newProductUpcItem(awsLookup, "aws"), w)
+}
+
+func handleData(err error, r *http.Request, data *ProductUpcItem, w http.ResponseWriter) {
+	if err == nil {
+		p := newProductUpcResponse(r)
+		p.ProductUpcItem = append(p.ProductUpcItem, data)
+		p.show(w)
+	} else {
+		NewStatus(w, "noid", StatusRequestUnsuccessfully, "Handle on data is fail.").show(appengine.NewContext(r))
+	}
 }
