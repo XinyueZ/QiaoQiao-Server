@@ -10,20 +10,6 @@ import (
 	"net/http"
 )
 
-type ProductHandler func(w http.ResponseWriter, r *http.Request, res []byte)
-
-func handleProductUniversalProductCode(w http.ResponseWriter, r *http.Request, targetUrl string, handler ProductHandler, service string) {
-	param := NewParameter(r)
-
-	prodUpc := newProductUpc(r, targetUrl)
-	chBytes := make(chan []byte)
-
-	go prodUpc.get(param.Language, param.Keyword, chBytes, service)
-	res := <-chBytes
-
-	handler(w, r, res)
-}
-
 func handleProduct(w http.ResponseWriter, r *http.Request) {
 	cxt := appengine.NewContext(r)
 	param := NewParameter(r)
@@ -65,6 +51,20 @@ func handleProduct(w http.ResponseWriter, r *http.Request) {
 	}
 	p.show(w)
 }
+
+//type ProductHandler func(w http.ResponseWriter, r *http.Request, res []byte)
+//
+//func handleProductUniversalProductCode(w http.ResponseWriter, r *http.Request, targetUrl string, handler ProductHandler, service string) {
+//	param := NewParameter(r)
+//
+//	prodUpc := newProductUpc(r, targetUrl)
+//	chBytes := make(chan []byte)
+//
+//	go prodUpc.get(param.Language, param.Keyword, chBytes, service)
+//	res := <-chBytes
+//
+//	handler(w, r, res)
+//}
 
 //func handleEANdata(w http.ResponseWriter, r *http.Request, res []byte) {
 //	eandata := new(EANdataResult)
