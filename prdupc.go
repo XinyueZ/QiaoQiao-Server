@@ -32,10 +32,6 @@ func (p *ProductUpc) get(language string, code string, response chan []byte, ser
 	switch service {
 	case "eandata":
 		get(p.r, fmt.Sprintf(p.targetUrl, code, EANDATE_KEY), response)
-	case "aws":
-		for _, assoc := range AWS_ASSOCIATE_LIST {
-			get(p.r, getAWSapi(p, &assoc, code), response)
-		}
 	}
 }
 

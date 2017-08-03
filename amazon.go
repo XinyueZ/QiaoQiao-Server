@@ -1,405 +1,420 @@
+//Package amazonproduct provides methods for interacting with the Amazon Product Advertising API
 package qiaoqiao
 
 import (
-	"encoding/xml"
-	"time"
+	"errors"
 	"fmt"
-	"sort"
+	"strconv"
 	"strings"
-	"crypto/hmac"
-	"crypto/sha256"
-	"net/url"
-
-	"encoding/base64"
 )
 
-const timestampFormat = "2006-01-02T15:04:05Z"
+/*
+ItemLookup takes a product ID (ASIN) and returns the result
+*/
+func (api AmazonProductAPI) ItemLookup(ItemId string) (string, error) {
+	params := map[string]string{
+		"ItemId":        ItemId,
+		"ResponseGroup": "Images,ItemAttributes,Small,EditorialReview",
+	}
 
-var timeNowFunc = time.Now
-
-func escape(s string) (r string) {
-	r = strings.Replace(url.QueryEscape(s), "+", "%20", -1)
-	return
+	return api.genSignAndFetch("ItemLookup", params)
 }
 
-func getAWSapi(p *ProductUpc, associate *AmazonAssociate, searchedId string) (ep string) {
-	tm := timeNowFunc().UTC().Format(timestampFormat)
-	keyValue := make(map[string]string)
-	keyValue["Service"] = "AWSECommerceService"
-	keyValue["Operation"] = "ItemLookup"
-	keyValue["AWSAccessKeyId"] = AWS_ACCESS_ID
-	keyValue["AssociateTag"] = associate.Tag
-	keyValue["ItemId"] = searchedId
-	keyValue["IdType"] = "EAN"
-	keyValue["SearchIndex"] = "All"
-	keyValue["Timestamp"] = tm
-	queryKeys := make([]string, 0, len(keyValue))
-	for key := range keyValue {
-		queryKeys = append(queryKeys, key) // "key1", "key2" , "key3" .....
+/*
+ItemLookupWithResponseGroup takes a product ID (ASIN) and a ResponseGroup and returns the result
+*/
+func (api AmazonProductAPI) ItemLookupWithResponseGroup(ItemId string, ResponseGroup string) (string, error) {
+	params := map[string]string{
+		"ItemId":        ItemId,
+		"ResponseGroup": ResponseGroup,
 	}
-	sort.Strings(queryKeys)
-	queryKeysAndValues := make([]string, len(queryKeys))
-	for i, key := range queryKeys {
-		queryKeysAndValues[i] = escape(key) + "=" + escape(keyValue[key])
-	}
-	query := strings.Join(queryKeysAndValues, "&")
-	msg := "GET\n" +
-		associate.Host + "\n" +
-		AWS_PATH + "\n" +
-		query
-	mac := hmac.New(sha256.New, []byte(AWS_SECURITY_KEY))
-	mac.Write([]byte(msg))
-	sig := base64.StdEncoding.EncodeToString(mac.Sum(nil))
-	ep = fmt.Sprintf(
-		p.targetUrl,
-		associate.Host,
-		AWS_PATH,
-		AWS_ACCESS_ID,
-		associate.Tag,
-		searchedId,
-		tm,
-		sig)
-	return
+
+	return api.genSignAndFetch("ItemLookup", params)
 }
 
-func (p *ItemLookupResponse) getStatus() (status int) {
-	if len(p.Items.Item) > 0 {
-		status = StatusRequestSuccessfully
-	} else {
-		status = StatusRequestUnsuccessfully
+/*
+ItemLookupWithParams takes the params for ItemLookup and returns the result
+*/
+func (api AmazonProductAPI) ItemLookupWithParams(params map[string]string) (string, error) {
+	_, present := params["ItemId"]
+	if !present {
+		return "", errors.New("ItemId property is required in the params map")
 	}
-	return
+
+	return api.genSignAndFetch("ItemLookup", params)
 }
 
-func (p *ItemLookupResponse) getProduct() string {
-	if p.getStatus() == StatusRequestSuccessfully {
-		return p.Items.Item[0].ItemAttributes.Title
+/*
+MultipleItemLookup takes an array of product IDs (ASIN) and returns the result
+*/
+func (api AmazonProductAPI) MultipleItemLookup(ItemIds []string) (string, error) {
+	params := map[string]string{
+		"ItemId":        strings.Join(ItemIds, ","),
+		"ResponseGroup": "Images,ItemAttributes,Small,EditorialReview",
 	}
-	return ""
+
+	return api.genSignAndFetch("ItemLookup", params)
 }
-func (p *ItemLookupResponse) getDescription() (desc string) {
-	if p.getStatus() == StatusRequestSuccessfully {
-		return p.Items.Item[0].ItemAttributes.Title
+
+/*
+MultipleItemLookupWithResponseGroup takes an array of product IDs (ASIN) as well as a ResponseGroup and returns the result
+*/
+func (api AmazonProductAPI) MultipleItemLookupWithResponseGroup(ItemIds []string, ResponseGroup string) (string, error) {
+	params := map[string]string{
+		"ItemId":        strings.Join(ItemIds, ","),
+		"ResponseGroup": ResponseGroup,
 	}
-	return ""
+
+	return api.genSignAndFetch("ItemLookup", params)
 }
-func (p *ItemLookupResponse) getPeople() (people string) {
-	if p.getStatus() == StatusRequestSuccessfully {
-		people = ""
-		for _, s := range p.Items.Item[0].ItemAttributes.Author {
-			people = people + s + " "
+
+/*
+ItemSearchByKeyword takes a string containing keywords and returns the search results
+*/
+func (api AmazonProductAPI) ItemSearchByKeyword(Keywords string, page int) (string, error) {
+	params := map[string]string{
+		"Keywords":      Keywords,
+		"ResponseGroup": "Images,ItemAttributes,Small,EditorialReview",
+		"ItemPage":      strconv.FormatInt(int64(page), 10),
+	}
+	return api.ItemSearch("All", params)
+}
+
+func (api AmazonProductAPI) ItemSearchByKeywordWithResponseGroup(Keywords string, ResponseGroup string) (string, error) {
+	params := map[string]string{
+		"Keywords":      Keywords,
+		"ResponseGroup": ResponseGroup,
+	}
+	return api.ItemSearch("All", params)
+}
+
+func (api AmazonProductAPI) ItemSearch(SearchIndex string, Parameters map[string]string) (string, error) {
+	Parameters["SearchIndex"] = SearchIndex
+	return api.genSignAndFetch("ItemSearch", Parameters)
+}
+
+/*
+CartCreate takes a map containing ASINs and quantities. Up to 10 items are allowed
+*/
+func (api AmazonProductAPI) CartCreate(items map[string]int) (string, error) {
+
+	params := make(map[string]string)
+
+	i := 1
+	for k, v := range items {
+		if i < 11 {
+			key := fmt.Sprintf("Item.%d.ASIN", i)
+			params[key] = string(k)
+
+			key = fmt.Sprintf("Item.%d.Quantity", i)
+			params[key] = strconv.Itoa(v)
+
+			i++
+		} else {
+			break
 		}
-		return
 	}
-	return ""
+	return api.genSignAndFetch("CartCreate", params)
 }
-func (p *ItemLookupResponse) getBarcodeUrl() string {
-	if p.getStatus() == StatusRequestSuccessfully {
-		return p.Items.Item[0].DetailPageURL
+
+/*
+CartAdd takes a map containing ASINs and quantities and adds them to the given cart.
+Up to 10 items are allowed
+*/
+func (api AmazonProductAPI) CartAdd(items map[string]int, cartid, HMAC string) (string, error) {
+
+	params := map[string]string{
+		"CartId": cartid,
+		"HMAC":   HMAC,
 	}
-	return ""
-}
-func (p *ItemLookupResponse) getCompany() Company {
-	if p.getStatus() == StatusRequestSuccessfully {
-		return Company{
-			p.Items.Item[0].ItemAttributes.Manufacturer,
-			p.Items.Item[0].DetailPageURL,
+
+	i := 1
+	for k, v := range items {
+		if i < 11 {
+			key := fmt.Sprintf("Item.%d.ASIN", i)
+			params[key] = string(k)
+
+			key = fmt.Sprintf("Item.%d.Quantity", i)
+			params[key] = strconv.Itoa(v)
+
+			i++
+		} else {
+			break
 		}
 	}
-	return Company{"", ""}
+	return api.genSignAndFetch("CartAdd", params)
 }
 
-type ItemLink struct {
-	Description string
-	URL         string
+/*
+CartClear takes a CartId and HMAC that were returned when generating a cart
+It then removes the contents of the cart
+*/
+func (api AmazonProductAPI) CartClear(CartId, HMAC string) (string, error) {
+
+	params := map[string]string{
+		"CartId": CartId,
+		"HMAC":   HMAC,
+	}
+
+	return api.genSignAndFetch("CartClear", params)
 }
 
-type ItemLinks struct {
-	ItemLink []ItemLink
+/*
+Cart get takes a CartID and HMAC that were returned when generating a cart
+Returns the contents of the specified cart
+*/
+func (api AmazonProductAPI) CartGet(CartId, HMAC string) (string, error) {
+
+	params := map[string]string{
+		"CartId": CartId,
+		"HMAC":   HMAC,
+	}
+
+	return api.genSignAndFetch("CartGet", params)
 }
 
+/*
+BrowseNodeLookup takes a BrowseNodeId and returns the result.
+*/
+func (api AmazonProductAPI) BrowseNodeLookup(nodeId string) (string, error) {
+	params := map[string]string{
+		"BrowseNodeId": nodeId,
+	}
+	return api.genSignAndFetch("BrowseNodeLookup", params)
+}
+
+func (api AmazonProductAPI) BrowseNodeLookupWithResponseGroup(nodeId string, responseGroup string) (string, error) {
+	params := map[string]string{
+		"BrowseNodeId":  nodeId,
+		"ResponseGroup": responseGroup,
+	}
+	return api.genSignAndFetch("BrowseNodeLookup", params)
+}
+
+// Response describes the generic API Response
+type AWSResponse struct {
+	OperationRequest struct {
+		RequestID             string     `xml:"RequestId"`
+		Arguments             []Argument `xml:"Arguments>Argument"`
+		RequestProcessingTime float64
+	}
+}
+
+// Argument todo
+type Argument struct {
+	Name  string `xml:"Name,attr"`
+	Value string `xml:"Value,attr"`
+}
+
+// Image todo
 type Image struct {
 	URL    string
-	Height Size
-	Width  Size
+	Height uint16
+	Width  uint16
 }
 
-type Size struct {
-	Value int    `xml:",chardata"`
-	Units string `xml:",attr"`
-}
-
-type ImageSets struct {
-	ImageSet []ImageSet
-}
-
-type ImageSet struct {
-	Category       string `xml:",attr"`
-	SwatchImage    Image
-	SmallImage     Image
-	ThumbnailImage Image
-	TinyImage      Image
-	MediumImage    Image
-	LargeImage     Image
-}
-
-type ItemAttributes struct {
-	Author            []string
-	Artist            string
-	Actor             string
-	AspectRatio       string
-	AudienceRating    string
-	Binding           string
-	Creator           Creator
-	EAN               string
-	EANList           EANList
-	CatalogNumberList CatalogNumberList
-	Format            []string
-	IsAdultProduct    bool
-	ISBN              string
-	Label             string
-	Languages         Languages
-	ListPrice         Price
-	Manufacturer      string
-	NumberOfPages     int
-	PackageDimensions PackageDimensions
-	ProductGroup      string
-	ProductTypeName   string
-	PublicationDate   *Date
-	PackageQuantity   int
-	PartNumber        string
-	UPC               string
-	UPCList           UPCList
-	Publisher         string
-	Studio            string
-	Title             string
-	NumberOfDiscs     []int
-}
-
-type Date struct {
-	time.Time
-}
-
-type Creator struct {
-	Role string `xml:",attr"`
-	Name string `xml:",chardata"`
-}
-
-type EANList struct {
-	Element []string `xml:"EANListElement"`
-}
-
-type Languages struct {
-	Language []Language
-}
-
-type Language struct {
-	Name        string
-	Type        string
-	AudioFormat string
-}
-
+// Price describes the product price as
+// Amount of cents in CurrencyCode
 type Price struct {
-	Amount         string
+	Amount         uint
 	CurrencyCode   string
 	FormattedPrice string
 }
 
-type PackageDimensions struct {
-	Height Size
-	Length Size
-	Weight Size
-	Width  Size
+type TopSeller struct {
+	ASIN  string
+	Title string
 }
 
+// Item represents a product returned by the API
+type Item struct {
+	ASIN             string
+	URL              string
+	DetailPageURL    string
+	ItemAttributes   ItemAttributes
+	OfferSummary     OfferSummary
+	Offers           Offers
+	SalesRank        int
+	SmallImage       Image
+	MediumImage      Image
+	LargeImage       Image
+	EditorialReviews EditorialReviews
+	BrowseNodes struct {
+		BrowseNode []BrowseNode
+	}
+}
+
+// BrowseNode represents a browse node returned by API
+type BrowseNode struct {
+	BrowseNodeID string `xml:"BrowseNodeId"`
+	Name         string
+	TopSellers struct {
+		TopSeller []TopSeller
+	}
+	Ancestors struct {
+		BrowseNode []BrowseNode
+	}
+}
+
+// ItemAttributes response group
+type ItemAttributes struct {
+	Author          string
+	Binding         string
+	Brand           string
+	Color           string
+	EAN             string
+	Creator         string
+	Title           string
+	ListPrice       Price
+	Manufacturer    string
+	Publisher       string
+	NumberOfItems   int
+	PackageQuantity int
+	Feature         string
+	Model           string
+	ProductGroup    string
+	ReleaseDate     string
+	Studio          string
+	Warranty        string
+	Size            string
+	UPC             string
+}
+
+// Offer response attribute
+type Offer struct {
+	Condition       string `xml:"OfferAttributes>Condition"`
+	ID              string `xml:"OfferListing>OfferListingId"`
+	Price           Price  `xml:"OfferListing>Price"`
+	PercentageSaved uint   `xml:"OfferListing>PercentageSaved"`
+	Availability    string `xml:"OfferListing>Availability"`
+}
+
+// Offers response group
+type Offers struct {
+	TotalOffers     int
+	TotalOfferPages int
+	MoreOffersURL   string  `xml:"MoreOffersUrl"`
+	Offers          []Offer `xml:"Offer"`
+}
+
+// OfferSummary response group
 type OfferSummary struct {
 	LowestNewPrice   Price
-	LowestUsedPrice  Price
+	LowerUsedPrice   Price
 	TotalNew         int
 	TotalUsed        int
 	TotalCollectible int
 	TotalRefurbished int
 }
 
-type Offers struct {
-	TotalOffers     int
-	TotalOfferPages int
-	MoreOffersURL   string `xml:"MoreOffersUrl"`
-	Offer           []Offer
+// EditorialReview response attribute
+type EditorialReview struct {
+	Source  string
+	Content string
 }
 
-type Offer struct {
-	OfferAttributes OfferAttributes
-	OfferListing    OfferListing
-	LoyaltyPoints   LoyaltyPoints
-	Merchant        Merchant
+// EditorialReviews response group
+type EditorialReviews struct {
+	EditorialReview EditorialReview
 }
 
-type Merchant struct {
-	Name string
+// BrowseNodeLookupRequest is the confirmation of a BrowseNodeInfo request
+type BrowseNodeLookupRequest struct {
+	BrowseNodeId  string
+	ResponseGroup string
 }
 
-type OfferAttributes struct {
-	Condition string
+// ItemLookupRequest is the confirmation of a ItemLookup request
+type ItemLookupRequest struct {
+	IDType        string `xml:"IdType"`
+	ItemID        string `xml:"ItemId"`
+	ResponseGroup string `xml:"ResponseGroup"`
+	VariationPage string
 }
 
-type OfferListing struct {
-	ID                              string `xml:"OfferListingId"`
-	Price                           Price
-	Availability                    string
-	AvailabilityAttributes          AvailabilityAttributes
-	IsEligibleForSuperSaverShipping bool
-	IsEligibleForPrime              bool
-}
-
-type AvailabilityAttributes struct {
-	AvailabilityType string
-	MinimumHours     int
-	MaximumHours     int
-}
-
-type LoyaltyPoints struct {
-	Points                 int
-	TypicalRedemptionValue Price
-}
-
-type CustomerReviews struct {
-	IFrameURL  string
-	HasReviews bool
-}
-
-type SimilarProducts struct {
-	SimilarProduct []SimilarProduct
-}
-
-type asinTitle struct {
-	ASIN  string
-	Title string
-}
-
-type SimilarProduct struct {
-	asinTitle
-}
-
-type TopSellers struct {
-	TopSeller []TopSeller
-}
-
-type TopSeller struct {
-	asinTitle
-}
-
-type NewReleases struct {
-	NewRelease []NewRelease
-}
-
-type NewRelease struct {
-	asinTitle
-}
-
-type SimilarViewedProducts struct {
-	SimilarViewedProduct []SimilarViewedProduct
-}
-
-type SimilarViewedProduct struct {
-	asinTitle
-}
-
-type TopItemSet struct {
-	Type    string
-	TopItem []TopItem
-}
-
-type TopItem struct {
-	asinTitle
-	DetailPageURL string
-	ProductGroup  string
-	Author        string
-}
-
-type CatalogNumberList struct {
-	Element []string `xml:"CatalogNumberListElement"`
-}
-
-type UPCList struct {
-	Element []string `xml:"UPCListElement"`
-}
-
-type Item struct {
-	XMLName         xml.Name `xml:"Item"`
-	ASIN            string
-	DetailPageURL   string
-	SalesRank       int
-	ItemLinks       ItemLinks
-	SmallImage      Image
-	MediumImage     Image
-	LargeImage      Image
-	ImageSets       ImageSets
-	ItemAttributes  ItemAttributes
-	OfferSummary    OfferSummary
-	Offers          Offers
-	CustomerReviews CustomerReviews
-	SimilarProducts SimilarProducts
-	BrowseNodes     BrowseNodes
-}
-type BrowseNodes struct {
-	BrowseNode []BrowseNode
-	Request    Request
-}
-
-type Request struct {
-	IsValid bool
-	Errors  *Errors
-}
-
-type Errors struct {
-	XMLName   xml.Name `xml:"Errors"`
-	ErrorNode []Error  `xml:"Error"`
-}
-
-type ErrorCode string
-
-type Error struct {
-	Code    ErrorCode
-	Message string
-}
-
-func (e Error) Error() string {
-	if e.Code != "" {
-		return fmt.Sprintf("Error %v: %v", e.Code, e.Message)
-	}
-	return ""
-}
-
-func (e Errors) Error() string {
-	if len(e.ErrorNode) > 0 {
-		return e.ErrorNode[0].Error()
-	}
-	return ""
-}
-
-type BrowseNode struct {
-	ID         string `xml:"BrowseNodeId"`
-	Name       string
-	Ancestors  BrowseNodes
-	Children   BrowseNodes
-	TopSellers TopSellers
-	TopItemSet []TopItemSet
-}
-
-type Items struct {
-	TotalResults         int
-	TotalPages           int
-	MoreSearchResultsURL string `xml:"MoreSearchResultsUrl"`
-	Item                 []Item
-}
-
+// ItemLookupResponse describes the API response for the ItemLookup operation
 type ItemLookupResponse struct {
-	XMLName xml.Name `xml:"ItemLookupResponse"`
-	Items   Items    `xml:"Items"`
+	AWSResponse
+	Items struct {
+		Request struct {
+			IsValid           bool
+			ItemLookupRequest ItemLookupRequest
+		}
+		Item Item `xml:"Item"`
+	}
 }
 
-type AmazonAssociate struct {
-	Tag  string
-	Host string
+// ItemSearchRequest is the confirmation of a ItemSearch request
+type ItemSearchRequest struct {
+	Keywords      string `xml:"Keywords"`
+	SearchIndex   string `xml:"SearchIndex"`
+	ResponseGroup string `xml:"ResponseGroup"`
+}
+
+type ItemSearchResponse struct {
+	AWSResponse
+	Items struct {
+		Request struct {
+			IsValid           bool
+			ItemSearchRequest ItemSearchRequest
+		}
+		Items                []Item `xml:"Item"`
+		TotalResult          int
+		TotalPages           int
+		MoreSearchResultsUrl string
+	}
+}
+
+type BrowseNodeLookupResponse struct {
+	AWSResponse
+	BrowseNodes struct {
+		Request struct {
+			IsValid                 bool
+			BrowseNodeLookupRequest BrowseNodeLookupRequest
+		}
+		BrowseNode BrowseNode
+	}
+}
+
+func (p *ItemLookupResponse) getStatus() (status int) {
+	if p.Items.Request.IsValid {
+		status = StatusRequestSuccessfully
+	} else {
+		status = StatusRequestUnsuccessfully
+	}
+	return StatusRequestSuccessfully
+}
+
+func (p *ItemLookupResponse) getProduct() string {
+	if p.getStatus() == StatusRequestSuccessfully {
+		return p.Items.Item.ItemAttributes.Title
+	}
+	return ""
+}
+func (p *ItemLookupResponse) getDescription() (desc string) {
+	if p.getStatus() == StatusRequestSuccessfully {
+		return p.Items.Item.ItemAttributes.Title
+	}
+	return ""
+}
+func (p *ItemLookupResponse) getPeople() (people string) {
+	if p.getStatus() == StatusRequestSuccessfully {
+		return p.Items.Item.ItemAttributes.Author
+	}
+	return ""
+}
+func (p *ItemLookupResponse) getBarcodeUrl() string {
+	if p.getStatus() == StatusRequestSuccessfully {
+		return "http://www.searchupc.com/drawupc.aspx?q=" + p.Items.Request.ItemLookupRequest.ItemID
+	}
+	return ""
+}
+func (p *ItemLookupResponse) getCompany() Company {
+	if p.getStatus() == StatusRequestSuccessfully {
+		return Company{
+			p.Items.Item.ItemAttributes.Publisher,
+			p.Items.Item.DetailPageURL,
+		}
+	}
+	return Company{"", ""}
 }

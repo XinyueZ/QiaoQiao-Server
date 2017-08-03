@@ -11,4 +11,4 @@ const defaultImage = "http://www.skillsforlifefoundation.com/images/default-thum
 
 const eandataUrl = "http://eandata.com/feed/?v=3&mode=json&find=%s&keycode=%s"
 
-const awsUrl = "http://%s%s?AWSAccessKeyId=%s&AssociateTag=%s&IdType=EAN&ItemId=%s&Operation=ItemLookup&SearchIndex=All&Service=AWSECommerceService&Timestamp=%s&Signature=%s"
+const awsSerachResponseGroup = "Large"//"ItemAttributes,Reviews,Small"
