@@ -30,16 +30,25 @@ func handleProduct(w http.ResponseWriter, r *http.Request) {
 	go eandataUpc.get(param.Language, param.Keyword, chBytes, "eandata")
 	eandata := new(EANdataResult)
 	json.Unmarshal(<-chBytes, eandata)
-	p.ProductUpcItem = append(p.ProductUpcItem, newProductUpcItem(eandata, "eandata"))
+	obj := newProductUpcItem(eandata, "eandata")
+	if obj.Status == StatusRequestSuccessfully {
+		p.ProductUpcItem = append(p.ProductUpcItem, obj)
+	}
 
 	awsUpc := newProductUpc(r, awsUrl)
 	go awsUpc.get(param.Language, param.Keyword, chBytes, "aws")
 	awsLookup := new(ItemLookupResponse)
 	xml.Unmarshal(<-chBytes, awsLookup)
-	p.ProductUpcItem = append(p.ProductUpcItem, newProductUpcItem(awsLookup, "aws"))
+	obj = newProductUpcItem(awsLookup, "aws")
+	if obj.Status == StatusRequestSuccessfully {
+		p.ProductUpcItem = append(p.ProductUpcItem, obj)
+	}
 	awsLookup = new(ItemLookupResponse)
 	xml.Unmarshal(<-chBytes, awsLookup)
-	p.ProductUpcItem = append(p.ProductUpcItem, newProductUpcItem(awsLookup, "aws"))
+	obj = newProductUpcItem(awsLookup, "aws")
+	if obj.Status == StatusRequestSuccessfully {
+		p.ProductUpcItem = append(p.ProductUpcItem, obj)
+	}
 
 	p.show(w)
 }
