@@ -63,31 +63,50 @@ func getAWSapi(p *ProductUpc, associate *AmazonAssociate, searchedId string) (ep
 }
 
 func (p *ItemLookupResponse) getStatus() (status int) {
-	status = 123
+	if len(p.Items.Item) > 0 {
+		status = StatusRequestSuccessfully
+	} else {
+		status = StatusRequestUnsuccessfully
+	}
 	return
 }
 
 func (p *ItemLookupResponse) getProduct() string {
-	return p.Items.Item[0].ItemAttributes.Title
+	if p.getStatus() == StatusRequestSuccessfully {
+		return p.Items.Item[0].ItemAttributes.Title
+	}
+	return ""
 }
 func (p *ItemLookupResponse) getDescription() (desc string) {
-	return p.Items.Item[0].ItemAttributes.Title
+	if p.getStatus() == StatusRequestSuccessfully {
+		return p.Items.Item[0].ItemAttributes.Title
+	}
+	return ""
 }
 func (p *ItemLookupResponse) getPeople() (people string) {
-	people = ""
-	for _, s := range p.Items.Item[0].ItemAttributes.Author {
-		people = people + s + " "
+	if p.getStatus() == StatusRequestSuccessfully {
+		people = ""
+		for _, s := range p.Items.Item[0].ItemAttributes.Author {
+			people = people + s + " "
+		}
+		return
 	}
-	return
+	return ""
 }
 func (p *ItemLookupResponse) getBarcodeUrl() string {
-	return p.Items.Item[0].DetailPageURL
+	if p.getStatus() == StatusRequestSuccessfully {
+		return p.Items.Item[0].DetailPageURL
+	}
+	return ""
 }
 func (p *ItemLookupResponse) getCompany() Company {
-	return Company{
-		p.Items.Item[0].ItemAttributes.Manufacturer,
-		p.Items.Item[0].DetailPageURL,
+	if p.getStatus() == StatusRequestSuccessfully {
+		return Company{
+			p.Items.Item[0].ItemAttributes.Manufacturer,
+			p.Items.Item[0].DetailPageURL,
+		}
 	}
+	return Company{"", ""}
 }
 
 type ItemLink struct {
