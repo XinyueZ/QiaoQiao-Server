@@ -1,8 +1,8 @@
 package qiaoqiao
 
 import (
-	"fmt"
 	"net/http"
+	"fmt"
 )
 
 func init() {
@@ -41,6 +41,7 @@ func handleImageDaily(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleProductUpc(w http.ResponseWriter, r *http.Request) {
-	handleProductUniversalProductCode(w, r, eandataUrl, handleEANdata, "eandata")
+	handleProduct(w, r)
+	//handleProductUniversalProductCode(w, r, eandataUrl, handleEANdata, "eandata")
 	//handleProductUniversalProductCode(w, r, awsUrl, handleAWS, "aws")
 }

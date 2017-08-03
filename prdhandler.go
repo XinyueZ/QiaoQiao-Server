@@ -14,10 +14,34 @@ func handleProductUniversalProductCode(w http.ResponseWriter, r *http.Request, t
 
 	prodUpc := newProductUpc(r, targetUrl)
 	chBytes := make(chan []byte)
+
 	go prodUpc.get(param.Language, param.Keyword, chBytes, service)
 	res := <-chBytes
 
 	handler(w, r, res)
+}
+
+func handleProduct(w http.ResponseWriter, r *http.Request) {
+	param := NewParameter(r)
+	p := newProductUpcResponse(r)
+
+	chBytes := make(chan []byte, 1+len(AWS_ASSOCIATE_LIST))
+	eandataUpc := newProductUpc(r, eandataUrl)
+	go eandataUpc.get(param.Language, param.Keyword, chBytes, "eandata")
+	eandata := new(EANdataResult)
+	json.Unmarshal(<-chBytes, eandata)
+	p.ProductUpcItem = append(p.ProductUpcItem, newProductUpcItem(eandata, "eandata"))
+
+	awsUpc := newProductUpc(r, awsUrl)
+	go awsUpc.get(param.Language, param.Keyword, chBytes, "aws")
+	awsLookup := new(ItemLookupResponse)
+	xml.Unmarshal(<-chBytes, awsLookup)
+	p.ProductUpcItem = append(p.ProductUpcItem, newProductUpcItem(awsLookup, "aws"))
+	awsLookup = new(ItemLookupResponse)
+	xml.Unmarshal(<-chBytes, awsLookup)
+	p.ProductUpcItem = append(p.ProductUpcItem, newProductUpcItem(awsLookup, "aws"))
+
+	p.show(w)
 }
 
 func handleEANdata(w http.ResponseWriter, r *http.Request, res []byte) {
