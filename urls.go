@@ -13,4 +13,4 @@ const eandataUrl = "http://eandata.com/feed/?v=3&mode=json&find=%s&keycode=%s"
 
 const awsSerachResponseGroup = "ItemAttributes,Reviews,Small"
 
-const searchupc = "http://www.searchupc.com/handlers/upcsearch.ashx?request_type=3&access_token=%s&upc=%s"
+const searchupcUrl = "http://www.searchupc.com/handlers/upcsearch.ashx?request_type=3&upc=%s&access_token=%s"
