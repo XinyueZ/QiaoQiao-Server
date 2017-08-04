@@ -41,13 +41,12 @@ func newProductQuery(r *http.Request, params *Parameter, targetUrl string, key s
 	return
 }
 
-func (p *ProductQuery) search(productResult IProductResult) (prdResp *ProductResponse) {
+func (p *ProductQuery) search(productResult IProductResult) *ProductResponse {
 	productViewModel := newProductViewModel(productResult.parse(p), p.name)
 	if productViewModel.Status == StatusRequestSuccessfully {
 		p.productResponse.ProductViewModels = append(p.productResponse.ProductViewModels, productViewModel)
 	}
-	prdResp = p.productResponse
-	return
+	return p.productResponse
 }
 
 type ProductResponse struct {
