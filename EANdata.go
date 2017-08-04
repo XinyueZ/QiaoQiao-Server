@@ -29,7 +29,7 @@ type ENAdataStatus struct {
 }
 
 type Product struct {
-	Attributes EANdataAttributes `json:"attributes"`
+	Attributes *EANdataAttributes `json:"attributes"`
 	EAN13      string            `json:"EAN13"`
 	ISBN10     string            `json:"ISBN10"`
 	Barcode    Barcode           `json:"barcode"`
@@ -48,7 +48,11 @@ func (p *EANdataResult) getStatus() (status int) {
 	case 0, 404:
 		status = StatusRequestUnsuccessfully
 	default:
-		status = StatusRequestSuccessfully
+		if p.Product.Attributes == nil {
+			status = StatusRequestUnsuccessfully
+		} else {
+			status = StatusRequestSuccessfully
+		}
 	}
 	return
 }

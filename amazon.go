@@ -192,12 +192,12 @@ func (api AmazonProductAPI) BrowseNodeLookupWithResponseGroup(nodeId string, res
 }
 
 func (p *ItemLookupResponse) getStatus() (status int) {
-	if p.Items.Request.IsValid && p.Items.Item.ItemAttributes.Title != "" {
-		status = StatusRequestSuccessfully
-	} else {
+	if !p.Items.Request.IsValid || p.Items.Item.ItemAttributes == nil {
 		status = StatusRequestUnsuccessfully
+	} else {
+		status = StatusRequestSuccessfully
 	}
-	return StatusRequestSuccessfully
+	return
 }
 
 func (p *ItemLookupResponse) getProduct() string {

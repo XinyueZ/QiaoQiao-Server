@@ -44,9 +44,11 @@ func handleProduct(w http.ResponseWriter, r *http.Request) {
 		if err == nil {
 			aws := new(ItemLookupResponse)
 			xml.Unmarshal([]byte(result), aws)
-			log.Infof(cxt, fmt.Sprintf("aws response %s", result))
-			obj = newProductUpcItem(aws, "aws")
-			p.ProductUpcItem = append(p.ProductUpcItem, obj)
+			if aws.getStatus() == StatusRequestSuccessfully {
+				log.Infof(cxt, fmt.Sprintf("aws response %s", result))
+				obj = newProductUpcItem(aws, "aws")
+				p.ProductUpcItem = append(p.ProductUpcItem, obj)
+			}
 		}
 	}
 	p.show(w)
