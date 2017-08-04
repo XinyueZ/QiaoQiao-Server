@@ -208,7 +208,8 @@ func (p *ItemLookupResponse) getProduct() string {
 }
 func (p *ItemLookupResponse) getDescription() (desc string) {
 	if p.getStatus() == StatusRequestSuccessfully {
-		return p.Items.Item.ItemAttributes.Title
+		return p.Items.Item.ItemAttributes.Title + "\n" +
+			p.Items.Item.EditorialReviews.EditorialReview.Content
 	}
 	return ""
 }
@@ -227,7 +228,9 @@ func (p *ItemLookupResponse) getBarcodeUrl() string {
 func (p *ItemLookupResponse) getCompany() Company {
 	if p.getStatus() == StatusRequestSuccessfully {
 		return Company{
-			p.Items.Item.ItemAttributes.Publisher,
+			p.Items.Item.ItemAttributes.Publisher + "\n" +
+				p.Items.Item.ItemAttributes.Studio + "\n" +
+				p.Items.Item.ItemAttributes.Manufacturer,
 			p.Items.Item.DetailPageURL,
 		}
 	}
