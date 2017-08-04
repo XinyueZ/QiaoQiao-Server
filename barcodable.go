@@ -27,7 +27,11 @@ type BarcodableAsin struct {
 func (p *BarcodableResult) getStatus() (status int) {
 	switch p.Status {
 	case 200:
-		status = StatusRequestSuccessfully
+		if len(p.Item.Asins) > 0 {
+			status = StatusRequestSuccessfully
+		} else {
+			status = StatusRequestUnsuccessfully
+		}
 	default:
 		status = StatusRequestUnsuccessfully
 	}
