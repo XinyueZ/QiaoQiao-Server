@@ -9,25 +9,21 @@ import (
 	"net/http"
 )
 
-func concatAppend(slices [][]byte) []byte {
-	var tmp []byte
-	for _, s := range slices {
-		tmp = append(tmp, s...)
-	}
-	return tmp
-}
-
 func handleProduct(w http.ResponseWriter, r *http.Request) {
 	cxt := appengine.NewContext(r)
 	params := NewParameter(r)
 
 	//eandata.com
-	eandataUpc := newProductRequest(r, params, eandataUrl, EANDATE_KEY, "eandata")
-	presenter := eandataUpc.search()
+	qEAN := newProductQuery(r, params, eandataUrl, EANDATE_KEY, "eandata")
+	presenter := qEAN.search()
 
 	//searchupc.com
-	searchupc := newProductRequest(r, params, searchupcUrl, SEARCH_UPC_KEY, "searchupc")
-	presenter.addViewModels(searchupc.search().ProductViewModels)
+	qSearchUpc := newProductQuery(r, params, searchupcUrl, SEARCH_UPC_KEY, "searchupc")
+	presenter.addViewModels(qSearchUpc.search().ProductViewModels)
+
+	//barcodable.com
+	qBarcodable := newProductQuery(r, params, barcodableUrl, "", "barcodable")
+	presenter.addViewModels(qBarcodable.search().ProductViewModels)
 
 	//aws
 	for i := 0; i < len(AWS_ASSOCIATE_LIST); i++ {

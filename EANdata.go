@@ -24,11 +24,11 @@ type Company struct {
 	Logo string `json:"logo"`
 }
 
-type ENAdataStatus struct {
+type EANdataStatus struct {
 	Code string `json:"code"`
 }
 
-type Product struct {
+type EANProduct struct {
 	Attributes *EANdataAttributes `json:"attributes"`
 	EAN13      string            `json:"EAN13"`
 	ISBN10     string            `json:"ISBN10"`
@@ -37,8 +37,8 @@ type Product struct {
 }
 
 type EANdataResult struct {
-	Status  ENAdataStatus `json:"status"`
-	Product Product       `json:"product"`
+	Status  EANdataStatus `json:"status"`
+	Product EANProduct    `json:"product"`
 	Company Company       `json:"company"`
 }
 

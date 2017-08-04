@@ -221,7 +221,7 @@ func (p *ItemLookupResponse) getPeople() (people string) {
 }
 func (p *ItemLookupResponse) getBarcodeUrl() string {
 	if p.getStatus() == StatusRequestSuccessfully {
-		return "http://www.searchupc.com/drawupc.aspx?q=" + p.Items.Request.ItemLookupRequest.ItemID
+		return generateBarcodeUrl(p.Items.Request.ItemLookupRequest.ItemID)
 	}
 	return ""
 }

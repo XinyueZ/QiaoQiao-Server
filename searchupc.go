@@ -51,7 +51,7 @@ func (p *SearchUpcResult) getBarcodeUrl() string {
 	if p.getStatus() == StatusRequestUnsuccessfully {
 		return ""
 	}
-	return "http://www.searchupc.com/drawupc.aspx?q=" + p.code
+	return generateBarcodeUrl(p.code)
 }
 func (p *SearchUpcResult) getCompany() Company {
 	if p.getStatus() == StatusRequestUnsuccessfully {

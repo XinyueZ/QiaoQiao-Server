@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"google.golang.org/appengine"
+	"google.golang.org/appengine/log"
 	"net/http"
 )
 
-type ProductRequest struct {
+type ProductQuery struct {
 	r               *http.Request
 	params          *Parameter
 	targetUrl       string
@@ -25,8 +26,8 @@ type IProductResult interface {
 	getCompany() Company
 }
 
-func newProductRequest(r *http.Request, params *Parameter, targetUrl string, key string, name string) (p *ProductRequest) {
-	p = new(ProductRequest)
+func newProductQuery(r *http.Request, params *Parameter, targetUrl string, key string, name string) (p *ProductQuery) {
+	p = new(ProductQuery)
 	p.r = r
 	p.params = params
 	p.targetUrl = targetUrl
@@ -36,7 +37,8 @@ func newProductRequest(r *http.Request, params *Parameter, targetUrl string, key
 	return
 }
 
-func (p *ProductRequest) get(language string, code string, key string, service string) (result IProductResult) {
+func (p *ProductQuery) get(language string, code string, key string, service string) (result IProductResult) {
+	cxt := appengine.NewContext(p.r)
 	result = nil
 	switch service {
 	case "eandata":
@@ -44,6 +46,7 @@ func (p *ProductRequest) get(language string, code string, key string, service s
 		go get(p.r, fmt.Sprintf(p.targetUrl, code, key), chBytes)
 		byteArray := <-chBytes
 		result = new(EANdataResult)
+		log.Infof(cxt, fmt.Sprintf("eandata parsed %s", string(byteArray)))
 		json.Unmarshal(byteArray, result)
 	case "searchupc":
 		chBytes := make(chan []byte)
@@ -52,15 +55,23 @@ func (p *ProductRequest) get(language string, code string, key string, service s
 		searchUpcResult := new(SearchUpcResult)
 		searchUpcResult.code = p.params.Keyword
 		result = searchUpcResult
+		log.Infof(cxt, fmt.Sprintf("searchupc parsed %s", string(byteArray)))
+		json.Unmarshal(byteArray, result)
+	case "barcodable":
+		chBytes := make(chan []byte)
+		go get(p.r, fmt.Sprintf(p.targetUrl, code), chBytes)
+		byteArray := <-chBytes
+		result = new(BarcodableResult)
+		log.Infof(cxt, fmt.Sprintf("barcodable parsed %s", string(byteArray)))
 		json.Unmarshal(byteArray, result)
 	}
 	return
 }
 
-func (p *ProductRequest) search() (prdResp *ProductResponse) {
-	obj := newProductViewModel(p.get(p.params.Language, p.params.Keyword, p.key, p.name), p.name)
-	if obj.Status == StatusRequestSuccessfully {
-		p.productResponse.ProductViewModels = append(p.productResponse.ProductViewModels, obj)
+func (p *ProductQuery) search() (prdResp *ProductResponse) {
+	productViewModel := newProductViewModel(p.get(p.params.Language, p.params.Keyword, p.key, p.name), p.name)
+	if productViewModel.Status == StatusRequestSuccessfully {
+		p.productResponse.ProductViewModels = append(p.productResponse.ProductViewModels, productViewModel)
 	}
 	prdResp = p.productResponse
 	return

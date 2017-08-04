@@ -11,6 +11,10 @@ const defaultImage = "http://www.skillsforlifefoundation.com/images/default-thum
 
 const eandataUrl = "http://eandata.com/feed/?v=3&mode=json&find=%s&keycode=%s"
 
-const awsSerachResponseGroup = "ItemAttributes,Reviews,Small"
+const awsSerachResponseGroup = "Medium"
 
 const searchupcUrl = "http://www.searchupc.com/handlers/upcsearch.ashx?request_type=3&upc=%s&access_token=%s"
+
+const upcitemdbUrl = "https://api.upcitemdb.com/prod/trial/lookup?&upc=%s"
+
+const barcodableUrl = "https://www.barcodable.com/api/v1/upc/%s"
