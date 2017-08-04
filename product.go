@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"google.golang.org/appengine"
-	"google.golang.org/appengine/log"
 	"net/http"
 )
 
@@ -24,6 +23,11 @@ type IProductResult interface {
 	getPeople() string
 	getBarcodeUrl() string
 	getCompany() Company
+	IParsable
+}
+
+type IParsable interface {
+	parse(productQuery *ProductQuery) IProductResult
 }
 
 func newProductQuery(r *http.Request, params *Parameter, targetUrl string, key string, name string) (p *ProductQuery) {
@@ -37,46 +41,8 @@ func newProductQuery(r *http.Request, params *Parameter, targetUrl string, key s
 	return
 }
 
-func (p *ProductQuery) get(language string, code string, key string, service string) (result IProductResult) {
-	cxt := appengine.NewContext(p.r)
-	result = nil
-	switch service {
-	case "eandata":
-		result = new(EANdataResult)
-		chBytes := make(chan []byte)
-		go get(p.r, fmt.Sprintf(p.targetUrl, code, key), chBytes)
-		byteArray := <-chBytes
-		log.Infof(cxt, fmt.Sprintf("eandata feeds %s", string(byteArray)))
-		json.Unmarshal(byteArray, result)
-	case "searchupc":
-		searchUpcResult := new(SearchUpcResult)
-		searchUpcResult.code = p.params.Keyword
-		result = searchUpcResult
-		chBytes := make(chan []byte)
-		go get(p.r, fmt.Sprintf(p.targetUrl, code, key), chBytes)
-		byteArray := <-chBytes
-		log.Infof(cxt, fmt.Sprintf("searchupc feeds %s", string(byteArray)))
-		json.Unmarshal(byteArray, result)
-	case "barcodable":
-		result = new(BarcodableResult)
-		chBytes := make(chan []byte)
-		go get(p.r, fmt.Sprintf(p.targetUrl, code), chBytes)
-		byteArray := <-chBytes
-		log.Infof(cxt, fmt.Sprintf("barcodable feeds %s", string(byteArray)))
-		json.Unmarshal(byteArray, result)
-	case "upcitemdb":
-		result = new(UpcItemDbResult)
-		chBytes := make(chan []byte)
-		go get(p.r, fmt.Sprintf(p.targetUrl, code), chBytes)
-		byteArray := <-chBytes
-		log.Infof(cxt, fmt.Sprintf("upcitemdb feeds %s", string(byteArray)))
-		json.Unmarshal(byteArray, result)
-	}
-	return
-}
-
-func (p *ProductQuery) search() (prdResp *ProductResponse) {
-	productViewModel := newProductViewModel(p.get(p.params.Language, p.params.Keyword, p.key, p.name), p.name)
+func (p *ProductQuery) search(productResult IProductResult) (prdResp *ProductResponse) {
+	productViewModel := newProductViewModel(productResult.parse(p), p.name)
 	if productViewModel.Status == StatusRequestSuccessfully {
 		p.productResponse.ProductViewModels = append(p.productResponse.ProductViewModels, productViewModel)
 	}

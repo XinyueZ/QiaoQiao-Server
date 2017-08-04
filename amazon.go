@@ -191,6 +191,10 @@ func (api AmazonProductAPI) BrowseNodeLookupWithResponseGroup(nodeId string, res
 	return api.genSignAndFetch("BrowseNodeLookup", params)
 }
 
+func (p *ItemLookupResponse) parse(productQuery *ProductQuery) IProductResult {
+	return p
+}
+
 func (p *ItemLookupResponse) getStatus() (status int) {
 	if !p.Items.Request.IsValid || p.Items.Item.ItemAttributes == nil {
 		status = StatusRequestUnsuccessfully

@@ -1,5 +1,12 @@
 package qiaoqiao
 
+import (
+	"google.golang.org/appengine"
+	"fmt"
+	"encoding/json"
+	"google.golang.org/appengine/log"
+)
+
 type BarcodableResult struct {
 	Status  int         `json:"status"`
 	Message string         `json:"message"`
@@ -22,6 +29,16 @@ type BarcodableAsin struct {
 	Url          string   `json:"url"`
 	Images       []string `json:"images"`
 	Categories   []string `json:"categories"`
+}
+
+func (p *BarcodableResult) parse(productQuery *ProductQuery) IProductResult {
+	cxt := appengine.NewContext(productQuery.r)
+	chBytes := make(chan []byte)
+	go get(productQuery.r, fmt.Sprintf(productQuery.targetUrl, productQuery.params.Keyword), chBytes)
+	byteArray := <-chBytes
+	log.Infof(cxt, fmt.Sprintf("%s feeds %s", productQuery.name, string(byteArray)))
+	json.Unmarshal(byteArray, p)
+	return p
 }
 
 func (p *BarcodableResult) getStatus() (status int) {

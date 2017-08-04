@@ -25,7 +25,6 @@ func NewStatus(w http.ResponseWriter, id string, status int, message string) (r 
 	return
 }
 
-
 func (p *Status) show(context context.Context) {
 	p.setupHeader()
 	p.output()

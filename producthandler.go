@@ -15,19 +15,19 @@ func handleProduct(w http.ResponseWriter, r *http.Request) {
 
 	//eandata.com
 	qEAN := newProductQuery(r, params, eandataUrl, EANDATE_KEY, "eandata")
-	presenter := qEAN.search()
+	presenter := qEAN.search(new(EANdataResult))
 
 	//searchupc.com
 	qSearchUpc := newProductQuery(r, params, searchupcUrl, SEARCH_UPC_KEY, "searchupc")
-	presenter.addViewModels(qSearchUpc.search().ProductViewModels)
+	presenter.addViewModels(qSearchUpc.search(new(SearchUpcResult).setCode(params.Keyword)).ProductViewModels)
 
 	//barcodable.com
 	qBarcodable := newProductQuery(r, params, barcodableUrl, "", "barcodable")
-	presenter.addViewModels(qBarcodable.search().ProductViewModels)
+	presenter.addViewModels(qBarcodable.search(new(BarcodableResult)).ProductViewModels)
 
 	//upcitemdb.com
 	qUpcitemdb := newProductQuery(r, params, upcitemdbUrl, "", "upcitemdb")
-	presenter.addViewModels(qUpcitemdb.search().ProductViewModels)
+	presenter.addViewModels(qUpcitemdb.search(new(UpcItemDbResult)).ProductViewModels)
 
 	//aws
 	for i := 0; i < len(AWS_ASSOCIATE_LIST); i++ {

@@ -2,6 +2,10 @@ package qiaoqiao
 
 import (
 	"strings"
+	"google.golang.org/appengine"
+	"fmt"
+	"encoding/json"
+	"google.golang.org/appengine/log"
 )
 
 type SearchUpcResult struct {
@@ -17,6 +21,21 @@ type SearchUpcResultItem struct {
 	Currency    string  `json:"currency"`
 	SalePrice   string  `json:"saleprice"`
 	StoreName   string  `json:"storename"`
+}
+
+func (p *SearchUpcResult) setCode(code string) IProductResult {
+	p.code = code
+	return p
+}
+
+func (p *SearchUpcResult) parse(productQuery *ProductQuery) IProductResult {
+	cxt := appengine.NewContext(productQuery.r)
+	chBytes := make(chan []byte)
+	go get(productQuery.r, fmt.Sprintf(productQuery.targetUrl, productQuery.params.Keyword, productQuery.key), chBytes)
+	byteArray := <-chBytes
+	log.Infof(cxt, fmt.Sprintf("%s feeds %s", productQuery.name, string(byteArray)))
+	json.Unmarshal(byteArray, p)
+	return p
 }
 
 func (p *SearchUpcResult) getStatus() (status int) {

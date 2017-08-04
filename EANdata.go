@@ -2,6 +2,10 @@ package qiaoqiao
 
 import (
 	"strconv"
+	"fmt"
+	"encoding/json"
+	"google.golang.org/appengine"
+	"google.golang.org/appengine/log"
 )
 
 type EANdataAttributes struct {
@@ -40,6 +44,16 @@ type EANdataResult struct {
 	Status  EANdataStatus `json:"status"`
 	Product EANProduct    `json:"product"`
 	Company Company       `json:"company"`
+}
+
+func (p *EANdataResult) parse(productQuery *ProductQuery) IProductResult {
+	cxt := appengine.NewContext(productQuery.r)
+	chBytes := make(chan []byte)
+	go get(productQuery.r, fmt.Sprintf(productQuery.targetUrl, productQuery.params.Keyword, productQuery.key), chBytes)
+	byteArray := <-chBytes
+	log.Infof(cxt, fmt.Sprintf("%s feeds %s", productQuery.name, string(byteArray)))
+	json.Unmarshal(byteArray, p)
+	return p
 }
 
 func (p *EANdataResult) getStatus() (status int) {
