@@ -42,27 +42,34 @@ func (p *ProductQuery) get(language string, code string, key string, service str
 	result = nil
 	switch service {
 	case "eandata":
+		result = new(EANdataResult)
 		chBytes := make(chan []byte)
 		go get(p.r, fmt.Sprintf(p.targetUrl, code, key), chBytes)
 		byteArray := <-chBytes
-		result = new(EANdataResult)
-		log.Infof(cxt, fmt.Sprintf("eandata parsed %s", string(byteArray)))
+		log.Infof(cxt, fmt.Sprintf("eandata feeds %s", string(byteArray)))
 		json.Unmarshal(byteArray, result)
 	case "searchupc":
-		chBytes := make(chan []byte)
-		go get(p.r, fmt.Sprintf(p.targetUrl, code, key), chBytes)
-		byteArray := <-chBytes
 		searchUpcResult := new(SearchUpcResult)
 		searchUpcResult.code = p.params.Keyword
 		result = searchUpcResult
-		log.Infof(cxt, fmt.Sprintf("searchupc parsed %s", string(byteArray)))
+		chBytes := make(chan []byte)
+		go get(p.r, fmt.Sprintf(p.targetUrl, code, key), chBytes)
+		byteArray := <-chBytes
+		log.Infof(cxt, fmt.Sprintf("searchupc feeds %s", string(byteArray)))
 		json.Unmarshal(byteArray, result)
 	case "barcodable":
+		result = new(BarcodableResult)
 		chBytes := make(chan []byte)
 		go get(p.r, fmt.Sprintf(p.targetUrl, code), chBytes)
 		byteArray := <-chBytes
-		result = new(BarcodableResult)
-		log.Infof(cxt, fmt.Sprintf("barcodable parsed %s", string(byteArray)))
+		log.Infof(cxt, fmt.Sprintf("barcodable feeds %s", string(byteArray)))
+		json.Unmarshal(byteArray, result)
+	case "upcitemdb":
+		result = new(UpcItemDbResult)
+		chBytes := make(chan []byte)
+		go get(p.r, fmt.Sprintf(p.targetUrl, code), chBytes)
+		byteArray := <-chBytes
+		log.Infof(cxt, fmt.Sprintf("upcitemdb feeds %s", string(byteArray)))
 		json.Unmarshal(byteArray, result)
 	}
 	return

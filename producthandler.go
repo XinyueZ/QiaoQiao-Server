@@ -25,6 +25,10 @@ func handleProduct(w http.ResponseWriter, r *http.Request) {
 	qBarcodable := newProductQuery(r, params, barcodableUrl, "", "barcodable")
 	presenter.addViewModels(qBarcodable.search().ProductViewModels)
 
+	//upcitemdb.com
+	qUpcitemdb := newProductQuery(r, params, upcitemdbUrl, "", "upcitemdb")
+	presenter.addViewModels(qUpcitemdb.search().ProductViewModels)
+
 	//aws
 	for i := 0; i < len(AWS_ASSOCIATE_LIST); i++ {
 		var api AmazonProductAPI
@@ -44,7 +48,7 @@ func handleProduct(w http.ResponseWriter, r *http.Request) {
 			aws := new(ItemLookupResponse)
 			xml.Unmarshal([]byte(result), aws)
 			if aws.getStatus() == StatusRequestSuccessfully {
-				log.Infof(cxt, fmt.Sprintf("aws response %s", result))
+				log.Infof(cxt, fmt.Sprintf("aws feeds %s", result))
 				obj := newProductViewModel(aws, "aws")
 				presenter.addViewModel(obj)
 			}
