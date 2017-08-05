@@ -37,13 +37,13 @@ func handleProduct(w http.ResponseWriter, r *http.Request) {
 		api.AssociateTag = AWS_ASSOCIATE_LIST[i].Tag
 		api.Host = AWS_ASSOCIATE_LIST[i].Host
 		api.Client = urlfetch.Client(cxt)
-		params := map[string]string{
+		awsparams := map[string]string{
 			"ItemId":        params.Keyword,
 			"IdType":        "EAN",
 			"SearchIndex":   "All",
 			"ResponseGroup": awsSerachResponseGroup,
 		}
-		result, err := api.ItemLookupWithParams(params)
+		result, err := api.ItemLookupWithParams(awsparams)
 		if err == nil {
 			aws := new(ItemLookupResponse)
 			xml.Unmarshal([]byte(result), aws)
@@ -51,6 +51,23 @@ func handleProduct(w http.ResponseWriter, r *http.Request) {
 				log.Infof(cxt, fmt.Sprintf("aws feeds %s", result))
 				obj := newProductViewModel(aws, "aws")
 				presenter.addViewModel(obj)
+			} else {
+				awsparams := map[string]string{
+					"ItemId":        params.Keyword,
+					"IdType":        "UPC",
+					"SearchIndex":   "All",
+					"ResponseGroup": awsSerachResponseGroup,
+				}
+				result, err := api.ItemLookupWithParams(awsparams)
+				if err == nil {
+					aws := new(ItemLookupResponse)
+					xml.Unmarshal([]byte(result), aws)
+					if aws.getStatus() == StatusRequestSuccessfully {
+						log.Infof(cxt, fmt.Sprintf("aws feeds %s", result))
+						obj := newProductViewModel(aws, "aws")
+						presenter.addViewModel(obj)
+					}
+				}
 			}
 		}
 	}
