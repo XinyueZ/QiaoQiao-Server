@@ -16,14 +16,21 @@ type ProductQuery struct {
 	productResponse *ProductResponse
 }
 
+type ProductImage struct {
+	Url       []string `json:"url"`
+	Thumbnail string `json:"thumbnail"`
+	Brand     string `json:"brand"`
+}
+
 type IProductResult interface {
+	IParsable
 	getStatus() int
 	getProduct() string
 	getDescription() string
 	getPeople() string
 	getBarcodeUrl() string
 	getCompany() Company
-	IParsable
+	getProductImage() []ProductImage
 }
 
 type IParsable interface {
@@ -85,13 +92,14 @@ func (p *ProductResponse) show(w http.ResponseWriter) {
 }
 
 type ProductViewModel struct {
-	Status      int     `json:"status"`
-	Product     string  `json:"product"`
-	Description string  `json:"description"`
-	Barcode     string  `json:"barcodeSource"`
-	Company     Company `json:"company"`
-	People      string  `json:"people"`
-	Source      string  `json:"source"`
+	Status           int     `json:"status"`
+	Product          string  `json:"product"`
+	Description      string  `json:"description"`
+	Barcode          string  `json:"barcodeSource"`
+	Company          Company `json:"company"`
+	People           string  `json:"people"`
+	Source           string  `json:"source"`
+	ProductImageList []ProductImage  `json:"product_image_list"`
 }
 
 func newProductViewModel(result IProductResult, source string) (item *ProductViewModel) {
@@ -103,5 +111,6 @@ func newProductViewModel(result IProductResult, source string) (item *ProductVie
 	item.People = result.getPeople()
 	item.Barcode = result.getBarcodeUrl()
 	item.Company = result.getCompany()
+	item.ProductImageList = result.getProductImage()
 	return
 }

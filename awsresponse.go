@@ -44,9 +44,10 @@ type Item struct {
 	OfferSummary     OfferSummary
 	Offers           Offers
 	SalesRank        int
-	SmallImage       Image
-	MediumImage      Image
-	LargeImage       Image
+	SmallImage       *Image
+	MediumImage      *Image
+	LargeImage       *Image
+	ImageSets        *ImageSets
 	EditorialReviews EditorialReviews
 	BrowseNodes struct {
 		BrowseNode []BrowseNode
@@ -183,4 +184,19 @@ type BrowseNodeLookupResponse struct {
 		}
 		BrowseNode BrowseNode
 	}
+}
+
+type ImageSets struct {
+	ImageSet []ImageSet
+}
+
+type ImageSet struct {
+	//Category string `xml:"Category,attr"`
+	Category       string `xml:",attr"`
+	SwatchImage    *Image
+	SmallImage     *Image
+	ThumbnailImage *Image
+	TinyImage      *Image
+	MediumImage    *Image
+	LargeImage     *Image
 }

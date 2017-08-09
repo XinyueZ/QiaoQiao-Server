@@ -81,3 +81,8 @@ func (p *SearchUpcResult) getCompany() Company {
 		"",
 	}
 }
+
+func (p *SearchUpcResult) getProductImage() (imageList []ProductImage) {
+	imageList = make([]ProductImage, 0)
+	return
+}
