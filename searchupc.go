@@ -1,7 +1,6 @@
 package qiaoqiao
 
 import (
-	"strings"
 	"google.golang.org/appengine"
 	"fmt"
 	"encoding/json"
@@ -39,7 +38,7 @@ func (p *SearchUpcResult) parse(productQuery *ProductQuery) IProductResult {
 }
 
 func (p *SearchUpcResult) getStatus() (status int) {
-	if p.Result == nil || strings.Trim(p.Result.ProductName, "") == "" {
+	if p.Result == nil || p.Result.ProductName == " " {
 		status = StatusRequestUnsuccessfully
 	} else {
 		status = StatusRequestSuccessfully
