@@ -33,6 +33,22 @@ type BarcodableAsin struct {
 }
 
 func (p *BarcodableResult) parse(productQuery *ProductQuery) IProductResult {
+	res := p.parseInternal(productQuery)
+
+	if res.getStatus() == StatusRequestUnsuccessfully {
+		newCodeType := p.codeType
+		if newCodeType == "upc" {
+			newCodeType = "ean"
+		} else {
+			newCodeType = "upc"
+		}
+		p.setCodeType(newCodeType)
+		res = p.parseInternal(productQuery)
+	}
+	return res
+}
+
+func (p *BarcodableResult) parseInternal(productQuery *ProductQuery) IProductResult {
 	cxt := appengine.NewContext(productQuery.r)
 	chBytes := make(chan []byte)
 	go get(productQuery.r, fmt.Sprintf(productQuery.targetUrl, p.codeType, productQuery.params.Keyword), chBytes)
