@@ -8,9 +8,10 @@ import (
 )
 
 type BarcodableResult struct {
-	Status  int         `json:"status"`
-	Message string         `json:"message"`
-	Item    BarcodableItem `json:"item"`
+	codeType string
+	Status   int         `json:"status"`
+	Message  string         `json:"message"`
+	Item     BarcodableItem `json:"item"`
 }
 
 type BarcodableItem struct {
@@ -34,10 +35,15 @@ type BarcodableAsin struct {
 func (p *BarcodableResult) parse(productQuery *ProductQuery) IProductResult {
 	cxt := appengine.NewContext(productQuery.r)
 	chBytes := make(chan []byte)
-	go get(productQuery.r, fmt.Sprintf(productQuery.targetUrl, productQuery.params.Keyword), chBytes)
+	go get(productQuery.r, fmt.Sprintf(productQuery.targetUrl, p.codeType, productQuery.params.Keyword), chBytes)
 	byteArray := <-chBytes
 	log.Infof(cxt, fmt.Sprintf("%s feeds %s", productQuery.name, string(byteArray)))
 	json.Unmarshal(byteArray, p)
+	return p
+}
+
+func (p *BarcodableResult) setCodeType(codeType string) (*BarcodableResult) {
+	p.codeType = codeType
 	return p
 }
 

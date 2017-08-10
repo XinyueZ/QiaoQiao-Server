@@ -23,7 +23,7 @@ func handleProduct(w http.ResponseWriter, r *http.Request) {
 
 	//barcodable.com
 	qBarcodable := newProductQuery(r, params, barcodableUrl, "", "barcodable")
-	presenter.addViewModels(qBarcodable.search(new(BarcodableResult)).ProductViewModels)
+	presenter.addViewModels(qBarcodable.search(new(BarcodableResult).setCodeType("upc")).ProductViewModels)
 
 	//upcitemdb.com
 	qUpcitemdb := newProductQuery(r, params, upcitemdbUrl, "", "upcitemdb")

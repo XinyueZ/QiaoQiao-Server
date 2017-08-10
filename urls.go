@@ -17,4 +17,4 @@ const searchupcUrl = "http://www.searchupc.com/handlers/upcsearch.ashx?request_t
 
 const upcitemdbUrl = "https://api.upcitemdb.com/prod/trial/lookup?upc=%s"
 
-const barcodableUrl = "https://www.barcodable.com/api/v1/upc/%s"
+const barcodableUrl = "https://www.barcodable.com/api/v1/%s/%s"
