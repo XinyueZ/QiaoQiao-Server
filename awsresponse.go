@@ -263,22 +263,16 @@ func (p *ItemLookupResponse) getProductImage() (imageList []ProductImage) {
 	imageList = make([]ProductImage, 0)
 	if p.getStatus() == StatusRequestSuccessfully {
 		if p.Items.Item.ImageSets.ImageSet != nil && len(p.Items.Item.ImageSets.ImageSet) > 0 {
-			pi := ProductImage{make([]string, 0), "", "aws"}
+			pi := ProductImage{make([]string, 0), make([]string, 0), make([]string, 0), "", "aws"}
 			for _, element := range p.Items.Item.ImageSets.ImageSet {
 				if element.SmallImage != nil {
-					pi.Url = append(pi.Url, element.SmallImage.URL)
+					pi.Small = append(pi.Small, element.SmallImage.URL)
 				}
 				if element.MediumImage != nil {
-					pi.Url = append(pi.Url, element.MediumImage.URL)
+					pi.Medium = append(pi.Medium, element.MediumImage.URL)
 				}
 				if element.LargeImage != nil {
-					pi.Url = append(pi.Url, element.LargeImage.URL)
-				}
-				if element.TinyImage != nil {
-					pi.Url = append(pi.Url, element.TinyImage.URL)
-				}
-				if element.SwatchImage != nil {
-					pi.Url = append(pi.Url, element.SwatchImage.URL)
+					pi.Large = append(pi.Large, element.LargeImage.URL)
 				}
 				if element.ThumbnailImage != nil {
 					pi.Thumbnail = element.ThumbnailImage.URL
@@ -286,15 +280,16 @@ func (p *ItemLookupResponse) getProductImage() (imageList []ProductImage) {
 				imageList = append(imageList, pi)
 			}
 		} else {
-			pi := ProductImage{make([]string, 0), "", "aws"}
+			pi := ProductImage{make([]string, 0), make([]string, 0), make([]string, 0), "", "aws"}
 			if p.Items.Item.SmallImage != nil {
 				pi.Thumbnail = p.Items.Item.SmallImage.URL
+				pi.Small = append(pi.Small, p.Items.Item.SmallImage.URL)
 			}
 			if p.Items.Item.LargeImage != nil {
-				pi.Url = append(pi.Url, p.Items.Item.LargeImage.URL)
+				pi.Large = append(pi.Large, p.Items.Item.LargeImage.URL)
 			}
 			if p.Items.Item.MediumImage != nil {
-				pi.Url = append(pi.Url, p.Items.Item.MediumImage.URL)
+				pi.Medium = append(pi.Medium, p.Items.Item.MediumImage.URL)
 			}
 			imageList = append(imageList, pi)
 		}

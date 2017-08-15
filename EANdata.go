@@ -110,8 +110,8 @@ func (p *EANdataResult) getCompany() Company {
 func (p *EANdataResult) getProductImage() (imageList []ProductImage) {
 	imageList = make([]ProductImage, 0)
 	if p.getStatus() == StatusRequestSuccessfully {
-		pi := ProductImage{make([]string, 0), "", "aws"}
-		pi.Url = append(pi.Url, p.Product.Image)
+		pi := ProductImage{make([]string, 0), make([]string, 0), make([]string, 0), "", "aws"}
+		pi.Medium = append(pi.Medium, p.Product.Image)
 		pi.Thumbnail = p.Product.Image
 		imageList = append(imageList, pi)
 	}

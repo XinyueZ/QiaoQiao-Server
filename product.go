@@ -17,7 +17,9 @@ type ProductQuery struct {
 }
 
 type ProductImage struct {
-	Url       []string `json:"url"`
+	Large     []string `json:"large"`
+	Medium    []string `json:"medium"`
+	Small     []string `json:"small"`
 	Thumbnail string `json:"thumbnail"`
 	Brand     string `json:"brand"`
 }

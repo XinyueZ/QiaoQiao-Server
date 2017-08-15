@@ -119,9 +119,9 @@ func (p *BarcodableResult) getProductImage() (imageList []ProductImage) {
 	imageList = make([]ProductImage, 0)
 	if p.getStatus() == StatusRequestSuccessfully {
 		if p.Item.Asins[0].Images != nil && len(p.Item.Asins[0].Images) > 0 {
-			pi := ProductImage{make([]string, 0), "", "aws"}
+			pi := ProductImage{make([]string, 0),  make([]string, 0), make([]string, 0), "", "aws"}
 			for _, element := range p.Item.Asins[0].Images {
-				pi.Url = append(pi.Url, element)
+				pi.Medium = append(pi.Medium, element)
 				pi.Thumbnail = element
 				imageList = append(imageList, pi)
 			}
