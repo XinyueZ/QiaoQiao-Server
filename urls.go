@@ -9,7 +9,7 @@ const urlWikiDocuments = "w/api.php?format=json&action=query&prop=extracts|pagei
 
 const defaultImage = "http://www.skillsforlifefoundation.com/images/default-thumbnail.jpg"
 
-const eandataUrl = "http://eandata.com/feed/?v=3&mode=json&find=%s&keycode=%s"
+const eandataUrl = "https://eandata.com/feed/?v=3&mode=json&find=%s&keycode=%s"
 
 const awsSerachResponseGroup = "Medium"
 
