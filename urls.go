@@ -18,3 +18,5 @@ const searchupcUrl = "http://www.searchupc.com/handlers/upcsearch.ashx?request_t
 const upcitemdbUrl = "https://api.upcitemdb.com/prod/trial/lookup?upc=%s"
 
 const barcodableUrl = "https://www.barcodable.com/api/v1/%s/%s"
+
+const walmartUrl = "http://api.walmartlabs.com/v1/items?apiKey=%s&upc=%s"
