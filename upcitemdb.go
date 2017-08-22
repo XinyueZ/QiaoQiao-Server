@@ -8,10 +8,11 @@ import (
 )
 
 type UpcItemDbResult struct {
-	Code   string `json:"code"`
-	Total  int `json:"total"`
-	Offset int `json:"offset"`
-	Items  []UpcItemDbItem `json:"items"`
+	Code       string `json:"code"`
+	Total      int `json:"total"`
+	Offset     int `json:"offset"`
+	Items      []UpcItemDbItem `json:"items"`
+	DataSource string
 }
 
 type UpcItemDbItem struct {
@@ -30,6 +31,7 @@ func (p *UpcItemDbResult) parse(productQuery *ProductQuery) IProductResult {
 	byteArray := <-chBytes
 	log.Infof(cxt, fmt.Sprintf("%s feeds %s", productQuery.name, string(byteArray)))
 	json.Unmarshal(byteArray, p)
+	p.DataSource = productQuery.name
 	return p
 }
 
@@ -77,7 +79,7 @@ func (p *UpcItemDbResult) getProductImage() (imageList []ProductImage) {
 	imageList = make([]ProductImage, 0)
 	if p.getStatus() == StatusRequestSuccessfully {
 		if p.Items[0].Images != nil && len(p.Items[0].Images) > 0 {
-			pi := ProductImage{make([]string, 0), make([]string, 0), make([]string, 0), "", "upcitemdb"}
+			pi := ProductImage{make([]string, 0), make([]string, 0), make([]string, 0), "", p.DataSource}
 			for _, element := range p.Items[0].Images {
 				pi.Medium = append(pi.Medium, element)
 				pi.Thumbnail = element

@@ -8,8 +8,9 @@ import (
 )
 
 type SearchUpcResult struct {
-	code   string
-	Result *SearchUpcResultItem `json:"0"`
+	code       string
+	Result     *SearchUpcResultItem `json:"0"`
+	DataSource string
 }
 
 type SearchUpcResultItem struct {
@@ -34,6 +35,7 @@ func (p *SearchUpcResult) parse(productQuery *ProductQuery) IProductResult {
 	byteArray := <-chBytes
 	log.Infof(cxt, fmt.Sprintf("%s feeds %s", productQuery.name, string(byteArray)))
 	json.Unmarshal(byteArray, p)
+	p.DataSource = productQuery.name
 	return p
 }
 

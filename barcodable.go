@@ -8,10 +8,11 @@ import (
 )
 
 type BarcodableResult struct {
-	codeType string
-	Status   int         `json:"status"`
-	Message  string         `json:"message"`
-	Item     BarcodableItem `json:"item"`
+	codeType   string
+	Status     int         `json:"status"`
+	Message    string         `json:"message"`
+	Item       BarcodableItem `json:"item"`
+	DataSource string
 }
 
 type BarcodableItem struct {
@@ -45,6 +46,7 @@ func (p *BarcodableResult) parse(productQuery *ProductQuery) IProductResult {
 		p.setCodeType(newCodeType)
 		res = p.parseInternal(productQuery)
 	}
+	p.DataSource = productQuery.name
 	return res
 }
 
@@ -119,7 +121,7 @@ func (p *BarcodableResult) getProductImage() (imageList []ProductImage) {
 	imageList = make([]ProductImage, 0)
 	if p.getStatus() == StatusRequestSuccessfully {
 		if p.Item.Asins[0].Images != nil && len(p.Item.Asins[0].Images) > 0 {
-			pi := ProductImage{make([]string, 0),  make([]string, 0), make([]string, 0), "", "barcodable"}
+			pi := ProductImage{make([]string, 0), make([]string, 0), make([]string, 0), "", p.DataSource}
 			for _, element := range p.Item.Asins[0].Images {
 				pi.Medium = append(pi.Medium, element)
 				pi.Thumbnail = element

@@ -8,6 +8,13 @@ import (
 	"google.golang.org/appengine/log"
 )
 
+type EANdataResult struct {
+	Status     EANdataStatus `json:"status"`
+	Product    EANProduct    `json:"product"`
+	Company    Company       `json:"company"`
+	DataSource string
+}
+
 type EANdataAttributes struct {
 	Product         string `json:"product"`
 	Description     string `json:"description"`
@@ -40,12 +47,6 @@ type EANProduct struct {
 	Image      string            `json:"image"`
 }
 
-type EANdataResult struct {
-	Status  EANdataStatus `json:"status"`
-	Product EANProduct    `json:"product"`
-	Company Company       `json:"company"`
-}
-
 func (p *EANdataResult) parse(productQuery *ProductQuery) IProductResult {
 	cxt := appengine.NewContext(productQuery.r)
 	chBytes := make(chan []byte)
@@ -53,6 +54,7 @@ func (p *EANdataResult) parse(productQuery *ProductQuery) IProductResult {
 	byteArray := <-chBytes
 	log.Infof(cxt, fmt.Sprintf("%s feeds %s", productQuery.name, string(byteArray)))
 	json.Unmarshal(byteArray, p)
+	p.DataSource = productQuery.name
 	return p
 }
 
@@ -110,7 +112,7 @@ func (p *EANdataResult) getCompany() Company {
 func (p *EANdataResult) getProductImage() (imageList []ProductImage) {
 	imageList = make([]ProductImage, 0)
 	if p.getStatus() == StatusRequestSuccessfully {
-		pi := ProductImage{make([]string, 0), make([]string, 0), make([]string, 0), "", "eandata"}
+		pi := ProductImage{make([]string, 0), make([]string, 0), make([]string, 0), "", p.DataSource}
 		pi.Medium = append(pi.Medium, p.Product.Image)
 		pi.Thumbnail = p.Product.Image
 		imageList = append(imageList, pi)

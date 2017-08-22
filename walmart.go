@@ -8,8 +8,9 @@ import (
 )
 
 type WalmartResult struct {
-	Items  []WalmartItem `json:"items"`
-	Errors []WalmartError `json:"errors"`
+	Items      []WalmartItem `json:"items"`
+	Errors     []WalmartError `json:"errors"`
+	DataSource string
 }
 
 type WalmartItem struct {
@@ -44,6 +45,7 @@ func (p *WalmartResult) parse(productQuery *ProductQuery) IProductResult {
 	byteArray := <-chBytes
 	log.Infof(cxt, fmt.Sprintf("%s feeds %s", productQuery.name, string(byteArray)))
 	json.Unmarshal(byteArray, p)
+	p.DataSource = productQuery.name
 	return p
 }
 
@@ -109,7 +111,7 @@ func (p *WalmartResult) getProductImage() (imageList []ProductImage) {
 	imageList = make([]ProductImage, 0)
 	if p.getStatus() == StatusRequestSuccessfully {
 		if p.Items[0].ImageEntities != nil && len(p.Items[0].ImageEntities) > 0 {
-			pi := ProductImage{make([]string, 0), make([]string, 0), make([]string, 0), "", "aws"}
+			pi := ProductImage{make([]string, 0), make([]string, 0), make([]string, 0), "", p.DataSource}
 			for _, element := range p.Items[0].ImageEntities {
 				if element.Thumbnail != nil {
 					pi.Small = append(pi.Small, *element.Thumbnail)
@@ -124,7 +126,7 @@ func (p *WalmartResult) getProductImage() (imageList []ProductImage) {
 				imageList = append(imageList, pi)
 			}
 		} else {
-			pi := ProductImage{make([]string, 0), make([]string, 0), make([]string, 0), "", "aws"}
+			pi := ProductImage{make([]string, 0), make([]string, 0), make([]string, 0), "", p.DataSource}
 			if p.Items[0].Thumbnail != nil {
 				pi.Thumbnail = *p.Items[0].Thumbnail
 				pi.Small = append(pi.Small, *p.Items[0].Thumbnail)
