@@ -29,6 +29,10 @@ func handleProduct(w http.ResponseWriter, r *http.Request) {
 	qUpcitemdb := newProductQuery(r, params, upcitemdbUrl, "", "upcitemdb")
 	presenter.addViewModels(qUpcitemdb.search(new(UpcItemDbResult)).ProductViewModels)
 
+	//Walmart
+	qWalmart:= newProductQuery(r, params, walmartUrl, "", "walmart")
+	presenter.addViewModels(qWalmart.search(new(WalmartResult)).ProductViewModels)
+
 	//aws
 	for i := 0; i < len(AWS_ASSOCIATE_LIST); i++ {
 		var api AmazonProductAPI
