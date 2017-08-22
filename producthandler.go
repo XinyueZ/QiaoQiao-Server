@@ -30,7 +30,7 @@ func handleProduct(w http.ResponseWriter, r *http.Request) {
 	presenter.addViewModels(qUpcitemdb.search(new(UpcItemDbResult)).ProductViewModels)
 
 	//Walmart
-	qWalmart:= newProductQuery(r, params, walmartUrl, "", "walmart")
+	qWalmart:= newProductQuery(r, params, walmartUrl, WALMART_KEY, "walmart")
 	presenter.addViewModels(qWalmart.search(new(WalmartResult)).ProductViewModels)
 
 	//aws
