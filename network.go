@@ -1,17 +1,21 @@
 package qiaoqiao
 
 import (
-	"net/http"
-	"google.golang.org/appengine"
+	"encoding/json"
 	"fmt"
+	"google.golang.org/appengine"
+	"google.golang.org/appengine/log"
 	"google.golang.org/appengine/urlfetch"
 	"io/ioutil"
-	"encoding/json"
-	"google.golang.org/appengine/log"
+	"net/http"
 )
 
 func get(r *http.Request, url string, response chan []byte) {
 	getMETHOD(r, url, response, nil)
+}
+
+func getWithHeader(r *http.Request, url string, response chan []byte, header *http.Header) {
+	getMETHOD(r, url, response, header)
 }
 
 func getMETHOD(r *http.Request, url string, response chan []byte, header *http.Header) {
