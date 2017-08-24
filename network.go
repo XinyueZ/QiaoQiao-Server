@@ -11,11 +11,18 @@ import (
 )
 
 func get(r *http.Request, url string, response chan []byte) {
+	getMETHOD(r, url, response, nil)
+}
+
+func getMETHOD(r *http.Request, url string, response chan []byte, header *http.Header) {
 	cxt := appengine.NewContext(r)
 
 	log.Infof(cxt, fmt.Sprintf("get url %s", url))
 	if req, err := http.NewRequest("GET", url, nil); err == nil {
 		httpClient := urlfetch.Client(cxt)
+		if header != nil {
+			req.Header = *header
+		}
 		r, err := httpClient.Do(req)
 		if r != nil {
 			defer r.Body.Close()
