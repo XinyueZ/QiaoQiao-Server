@@ -33,6 +33,11 @@ func handleProduct(w http.ResponseWriter, r *http.Request) {
 	qWalmart:= newProductQuery(r, params, walmartUrl, WALMART_KEY, "walmart")
 	presenter.addViewModels(qWalmart.search(new(WalmartResult)).ProductViewModels)
 
+	//tesco
+	qTesco := newProductQuery(r, params, tescoUrl, TESCO_KEY, "tesco")
+	presenter.addViewModels(qTesco.search(new(TescoResult)).ProductViewModels)
+
+
 	//aws
 	for i := 0; i < len(AWS_ASSOCIATE_LIST); i++ {
 		var api AmazonProductAPI
