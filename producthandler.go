@@ -9,7 +9,7 @@ import (
 	"net/http"
 )
 
-func handleProduct(w http.ResponseWriter, r *http.Request) {
+func handleProductByUpc(w http.ResponseWriter, r *http.Request) {
 	cxt := appengine.NewContext(r)
 	params := NewParameter(r)
 
@@ -81,4 +81,8 @@ func handleProduct(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	presenter.show(w)
+}
+
+func handleProductDetailByUpc(w http.ResponseWriter, r *http.Request) {
+
 }

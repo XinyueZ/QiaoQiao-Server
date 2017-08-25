@@ -7,6 +7,7 @@ import (
 
 func init() {
 	http.HandleFunc("/knowledge/product/upc", handleProductUpc)
+	http.HandleFunc("/knowledge/product/upc/detail", handleProductUpcDetail)
 	http.HandleFunc("/knowledge/images/daily", handleImageDaily)
 	http.HandleFunc("/knowledge/id/wikipedia", handleIdWikipedia)
 	http.HandleFunc("/knowledge/images/wikipedia", handleImagesWikipedia)
@@ -41,7 +42,9 @@ func handleImageDaily(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleProductUpc(w http.ResponseWriter, r *http.Request) {
-	handleProduct(w, r)
-	//handleProductUniversalProductCode(w, r, eandataUrl, handleEANdata, "eandata")
-	//handleProductUniversalProductCode(w, r, awsUrl, handleAWS, "aws")
+	handleProductByUpc(w, r)
+}
+
+func handleProductUpcDetail(w http.ResponseWriter, r *http.Request) {
+	handleProductDetailByUpc(w, r)
 }
