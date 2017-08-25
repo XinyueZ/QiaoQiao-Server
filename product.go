@@ -7,14 +7,22 @@ import (
 	"net/http"
 )
 
-func showJson(w http.ResponseWriter, p interface{}) {
+func showJson(w http.ResponseWriter, p IRequest) {
 	w.Header().Set("Content-Type", "application/json")
 	bytes, err := json.Marshal(p)
 	if err == nil {
 		fmt.Fprintf(w, "%s", bytes)
 	} else {
-		NewStatus(w, "noid", StatusRequestUnsuccessfully, "Can't give you UPC information.").show(appengine.NewContext(p.r))
+		NewStatus(w, "noid", StatusRequestUnsuccessfully, "Can't give you UPC information.").show(appengine.NewContext(p.request()))
 	}
+}
+
+type IRequest interface {
+	request() *http.Request
+}
+
+type IParsable interface {
+	parse(productQuery *ProductQuery) IProductResult
 }
 
 type ProductQuery struct {
@@ -30,8 +38,8 @@ type ProductImage struct {
 	Large     []string `json:"large"`
 	Medium    []string `json:"medium"`
 	Small     []string `json:"small"`
-	Thumbnail string `json:"thumbnail"`
-	Brand     string `json:"brand"`
+	Thumbnail string   `json:"thumbnail"`
+	Brand     string   `json:"brand"`
 }
 
 type IProductResult interface {
@@ -43,10 +51,6 @@ type IProductResult interface {
 	getBarcodeUrl() string
 	getCompany() Company
 	getProductImage() []ProductImage
-}
-
-type IParsable interface {
-	parse(productQuery *ProductQuery) IProductResult
 }
 
 func newProductQuery(r *http.Request, params *Parameter, targetUrl string, key string, name string) (p *ProductQuery) {
@@ -93,24 +97,58 @@ func (p *ProductResponse) addViewModels(viewModels []*ProductViewModel) (res *Pr
 	return
 }
 
+func (p *ProductResponse) request() (r *http.Request) {
+	r = p.r
+	return
+}
+
 func (p *ProductResponse) show(w http.ResponseWriter) {
 	showJson(w, p)
 }
 
 func (p *ProductResponse) toDetail() (ret *ProductViewModel) {
 	ret = new(ProductViewModel)
-	return nil
+	ret.r = p.r
+	for _, v := range p.ProductViewModels {
+		ret.Status = v.Status
+		if len(ret.Product) < len(v.Product) {
+			ret.Product = v.Product
+		}
+		if len(ret.Description) < len(v.Description) {
+			ret.Description = v.Description
+		}
+		if len(ret.Barcode) < len(v.Barcode) {
+			ret.Barcode = v.Barcode
+		}
+		if len(ret.People) < len(v.People) {
+			ret.People = v.People
+		}
+		if len(ret.Source) < len(v.Source) {
+			ret.Source = v.Source
+		}
+		if len(ret.ProductImageList) < len(v.ProductImageList) {
+			ret.ProductImageList = v.ProductImageList
+		}
+		if len(ret.Company.Name) < len(v.Company.Name) {
+			ret.Company.Name = v.Company.Name
+		}
+		if len(ret.Company.Logo) < len(v.Company.Logo) {
+			ret.Company.Logo = v.Company.Logo
+		}
+	}
+	return
 }
 
 type ProductViewModel struct {
-	Status           int     `json:"status"`
-	Product          string  `json:"product"`
-	Description      string  `json:"description"`
-	Barcode          string  `json:"barcodeSource"`
-	Company          Company `json:"company"`
-	People           string  `json:"people"`
-	Source           string  `json:"source"`
-	ProductImageList []ProductImage  `json:"product_image_list"`
+	r                *http.Request
+	Status           int            `json:"status"`
+	Product          string         `json:"product"`
+	Description      string         `json:"description"`
+	Barcode          string         `json:"barcodeSource"`
+	Company          Company        `json:"company"`
+	People           string         `json:"people"`
+	Source           string         `json:"source"`
+	ProductImageList []ProductImage `json:"product_image_list"`
 }
 
 func newProductViewModel(result IProductResult, source string) (item *ProductViewModel) {
@@ -123,6 +161,10 @@ func newProductViewModel(result IProductResult, source string) (item *ProductVie
 	item.Barcode = result.getBarcodeUrl()
 	item.Company = result.getCompany()
 	item.ProductImageList = result.getProductImage()
+	return
+}
+func (p *ProductViewModel) request() (r *http.Request) {
+	r = p.r
 	return
 }
 
