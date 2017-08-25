@@ -10,34 +10,36 @@ import (
 )
 
 func handleProductByUpc(w http.ResponseWriter, r *http.Request) {
+	presenter := buildProductResponse(r)
+	presenter.show(w)
+}
+
+func handleProductDetailByUpc(w http.ResponseWriter, r *http.Request) {
+	presenter := buildProductResponse(r)
+	presenter.toDetail().show(w)
+}
+
+func buildProductResponse(r *http.Request) *ProductResponse {
 	cxt := appengine.NewContext(r)
 	params := NewParameter(r)
-
 	//eandata.com
 	qEAN := newProductQuery(r, params, eandataUrl, EANDATE_KEY, "eandata")
 	presenter := qEAN.search(new(EANdataResult))
-
 	//searchupc.com
 	qSearchUpc := newProductQuery(r, params, searchupcUrl, SEARCH_UPC_KEY, "searchupc")
 	presenter.addViewModels(qSearchUpc.search(new(SearchUpcResult).setCode(params.Keyword)).ProductViewModels)
-
 	//barcodable.com
 	qBarcodable := newProductQuery(r, params, barcodableUrl, "", "barcodable")
 	presenter.addViewModels(qBarcodable.search(new(BarcodableResult).setCodeType("upc")).ProductViewModels)
-
 	//upcitemdb.com
 	qUpcitemdb := newProductQuery(r, params, upcitemdbUrl, "", "upcitemdb")
 	presenter.addViewModels(qUpcitemdb.search(new(UpcItemDbResult)).ProductViewModels)
-
 	//Walmart
-	qWalmart:= newProductQuery(r, params, walmartUrl, WALMART_KEY, "walmart")
+	qWalmart := newProductQuery(r, params, walmartUrl, WALMART_KEY, "walmart")
 	presenter.addViewModels(qWalmart.search(new(WalmartResult)).ProductViewModels)
-
 	//tesco
 	qTesco := newProductQuery(r, params, tescoUrl, TESCO_KEY, "tesco")
 	presenter.addViewModels(qTesco.search(new(TescoResult)).ProductViewModels)
-
-
 	//aws
 	for i := 0; i < len(AWS_ASSOCIATE_LIST); i++ {
 		var api AmazonProductAPI
@@ -80,9 +82,5 @@ func handleProductByUpc(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	presenter.show(w)
-}
-
-func handleProductDetailByUpc(w http.ResponseWriter, r *http.Request) {
-
+	return presenter
 }

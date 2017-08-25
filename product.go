@@ -7,6 +7,16 @@ import (
 	"net/http"
 )
 
+func showJson(w http.ResponseWriter, p interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	bytes, err := json.Marshal(p)
+	if err == nil {
+		fmt.Fprintf(w, "%s", bytes)
+	} else {
+		NewStatus(w, "noid", StatusRequestUnsuccessfully, "Can't give you UPC information.").show(appengine.NewContext(p.r))
+	}
+}
+
 type ProductQuery struct {
 	r               *http.Request
 	params          *Parameter
@@ -84,13 +94,12 @@ func (p *ProductResponse) addViewModels(viewModels []*ProductViewModel) (res *Pr
 }
 
 func (p *ProductResponse) show(w http.ResponseWriter) {
-	w.Header().Set("Content-Type", "application/json")
-	bytes, err := json.Marshal(p)
-	if err == nil {
-		fmt.Fprintf(w, "%s", bytes)
-	} else {
-		NewStatus(w, "noid", StatusRequestUnsuccessfully, "Can't give you UPC information.").show(appengine.NewContext(p.r))
-	}
+	showJson(w, p)
+}
+
+func (p *ProductResponse) toDetail() (ret *ProductViewModel) {
+	ret = new(ProductViewModel)
+	return nil
 }
 
 type ProductViewModel struct {
@@ -115,4 +124,8 @@ func newProductViewModel(result IProductResult, source string) (item *ProductVie
 	item.Company = result.getCompany()
 	item.ProductImageList = result.getProductImage()
 	return
+}
+
+func (p *ProductViewModel) show(w http.ResponseWriter) {
+	showJson(w, p)
 }
