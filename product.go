@@ -123,9 +123,8 @@ func (p *ProductResponse) toDetail() (ret *ProductViewModel) {
 		if len(ret.People) < len(v.People) {
 			ret.People = v.People
 		}
-		if len(ret.Source) < len(v.Source) {
-			ret.Source = v.Source
-		}
+		ret.Source = ret.Source + " " + v.Source
+
 		if len(ret.ProductImageList) < len(v.ProductImageList) {
 			ret.ProductImageList = v.ProductImageList
 		}
