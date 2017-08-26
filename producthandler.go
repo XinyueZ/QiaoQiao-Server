@@ -22,25 +22,35 @@ func handleProductDetailByUpc(w http.ResponseWriter, r *http.Request) {
 func buildProductResponse(r *http.Request) *ProductResponse {
 	cxt := appengine.NewContext(r)
 	params := NewParameter(r)
-	//eandata.com
+
+	ch := make(chan []*ProductViewModel, 5+len(AWS_ASSOCIATE_LIST)) // don't care the first one, eandata.com, 5 for others exclude aws
+	sign := make(chan int, 1)
+
+	//1. eandata.com
 	qEAN := newProductQuery(r, params, eandataUrl, EANDATE_KEY, "eandata")
 	presenter := qEAN.search(new(EANdataResult))
-	//searchupc.com
+
+	//2. searchupc.com
 	qSearchUpc := newProductQuery(r, params, searchupcUrl, SEARCH_UPC_KEY, "searchupc")
-	presenter.addViewModels(qSearchUpc.search(new(SearchUpcResult).setCode(params.Keyword)).ProductViewModels)
-	//barcodable.com
+	ch <- qSearchUpc.search(new(SearchUpcResult).setCode(params.Keyword)).ProductViewModels
+
+	//3. barcodable.com
 	qBarcodable := newProductQuery(r, params, barcodableUrl, "", "barcodable")
-	presenter.addViewModels(qBarcodable.search(new(BarcodableResult).setCodeType("upc")).ProductViewModels)
-	//upcitemdb.com
+	ch <- qBarcodable.search(new(BarcodableResult).setCodeType("upc")).ProductViewModels
+
+	//4. upcitemdb.com
 	qUpcitemdb := newProductQuery(r, params, upcitemdbUrl, "", "upcitemdb")
-	presenter.addViewModels(qUpcitemdb.search(new(UpcItemDbResult)).ProductViewModels)
-	//Walmart
+	ch <- qUpcitemdb.search(new(UpcItemDbResult)).ProductViewModels
+
+	//5. Walmart
 	qWalmart := newProductQuery(r, params, walmartUrl, WALMART_KEY, "walmart")
-	presenter.addViewModels(qWalmart.search(new(WalmartResult)).ProductViewModels)
-	//tesco
+	ch <- qWalmart.search(new(WalmartResult)).ProductViewModels
+
+	//6. tesco
 	qTesco := newProductQuery(r, params, tescoUrl, TESCO_KEY, "tesco")
-	presenter.addViewModels(qTesco.search(new(TescoResult)).ProductViewModels)
-	//aws
+	ch <- qTesco.search(new(TescoResult)).ProductViewModels
+
+	//7. aws
 	for i := 0; i < len(AWS_ASSOCIATE_LIST); i++ {
 		var api AmazonProductAPI
 		api.AccessKey = AWS_ACCESS_ID
@@ -62,6 +72,7 @@ func buildProductResponse(r *http.Request) *ProductResponse {
 				log.Infof(cxt, fmt.Sprintf("aws feeds %s", result))
 				obj := newProductViewModel(aws, "aws")
 				presenter.addViewModel(obj)
+				ch <- presenter.ProductViewModels
 			} else {
 				awsparams := map[string]string{
 					"ItemId":        params.Keyword,
@@ -77,10 +88,35 @@ func buildProductResponse(r *http.Request) *ProductResponse {
 						log.Infof(cxt, fmt.Sprintf("aws feeds %s", result))
 						obj := newProductViewModel(aws, "aws")
 						presenter.addViewModel(obj)
+						ch <- presenter.ProductViewModels
 					}
 				}
 			}
 		}
 	}
+
+
+	close(ch)
+	go func() {
+		var  out []*ProductViewModel
+		ok := true
+		for {
+			select {
+			case out, ok = <-ch:
+				if !ok {
+					break
+				} else  {
+					presenter.addViewModels(out)
+				}
+			}
+
+			if !ok {
+				sign <- 0
+				break
+			}
+		}
+
+	}()
+	<-sign
 	return presenter
 }
