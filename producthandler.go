@@ -23,34 +23,34 @@ func buildProductResponse(r *http.Request) *ProductResponse {
 	cxt := appengine.NewContext(r)
 	params := NewParameter(r)
 
-	ch := make(chan []*ProductViewModel, 5+len(AWS_ASSOCIATE_LIST)) // don't care the first one, eandata.com, 5 for others exclude aws
+	ch := make(chan []*ProductViewModel, 5) // don't care the first one, eandata.com, 5 for others exclude aws
 	sign := make(chan int, 1)
 
-	//1. eandata.com
+	// eandata.com
 	qEAN := newProductQuery(r, params, eandataUrl, EANDATE_KEY, "eandata")
 	presenter := qEAN.search(new(EANdataResult))
 
-	//2. searchupc.com
+	//1. searchupc.com
 	qSearchUpc := newProductQuery(r, params, searchupcUrl, SEARCH_UPC_KEY, "searchupc")
 	ch <- qSearchUpc.search(new(SearchUpcResult).setCode(params.Keyword)).ProductViewModels
 
-	//3. barcodable.com
+	//2. barcodable.com
 	qBarcodable := newProductQuery(r, params, barcodableUrl, "", "barcodable")
 	ch <- qBarcodable.search(new(BarcodableResult).setCodeType("upc")).ProductViewModels
 
-	//4. upcitemdb.com
+	//3. upcitemdb.com
 	qUpcitemdb := newProductQuery(r, params, upcitemdbUrl, "", "upcitemdb")
 	ch <- qUpcitemdb.search(new(UpcItemDbResult)).ProductViewModels
 
-	//5. Walmart
+	//4. Walmart
 	qWalmart := newProductQuery(r, params, walmartUrl, WALMART_KEY, "walmart")
 	ch <- qWalmart.search(new(WalmartResult)).ProductViewModels
 
-	//6. tesco
+	//5. tesco
 	qTesco := newProductQuery(r, params, tescoUrl, TESCO_KEY, "tesco")
 	ch <- qTesco.search(new(TescoResult)).ProductViewModels
 
-	//7. aws
+	// aws
 	for i := 0; i < len(AWS_ASSOCIATE_LIST); i++ {
 		var api AmazonProductAPI
 		api.AccessKey = AWS_ACCESS_ID
@@ -72,7 +72,6 @@ func buildProductResponse(r *http.Request) *ProductResponse {
 				log.Infof(cxt, fmt.Sprintf("aws feeds %s", result))
 				obj := newProductViewModel(aws, "aws")
 				presenter.addViewModel(obj)
-				ch <- presenter.ProductViewModels
 			} else {
 				awsparams := map[string]string{
 					"ItemId":        params.Keyword,
@@ -88,24 +87,22 @@ func buildProductResponse(r *http.Request) *ProductResponse {
 						log.Infof(cxt, fmt.Sprintf("aws feeds %s", result))
 						obj := newProductViewModel(aws, "aws")
 						presenter.addViewModel(obj)
-						ch <- presenter.ProductViewModels
 					}
 				}
 			}
 		}
 	}
 
-
 	close(ch)
 	go func() {
-		var  out []*ProductViewModel
+		var out []*ProductViewModel
 		ok := true
 		for {
 			select {
 			case out, ok = <-ch:
 				if !ok {
 					break
-				} else  {
+				} else {
 					presenter.addViewModels(out)
 				}
 			}
