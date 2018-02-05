@@ -1,11 +1,6 @@
 package qiaoqiao
 
 import (
-	"encoding/xml"
-	"fmt"
-	"google.golang.org/appengine"
-	"google.golang.org/appengine/log"
-	"google.golang.org/appengine/urlfetch"
 	"net/http"
 )
 
@@ -20,7 +15,6 @@ func handleProductDetailByUpc(w http.ResponseWriter, r *http.Request) {
 }
 
 func buildProductResponse(r *http.Request) *ProductResponse {
-	cxt := appengine.NewContext(r)
 	params := NewParameter(r)
 
 	ch := make(chan []*ProductViewModel, 5) // don't care the first one, eandata.com, 5 for others exclude aws
@@ -51,47 +45,48 @@ func buildProductResponse(r *http.Request) *ProductResponse {
 	ch <- qTesco.search(new(TescoResult)).ProductViewModels
 
 	// aws
-	for i := 0; i < len(AWS_ASSOCIATE_LIST); i++ {
-		var api AmazonProductAPI
-		api.AccessKey = AWS_ACCESS_ID
-		api.SecretKey = AWS_SECURITY_KEY
-		api.AssociateTag = AWS_ASSOCIATE_LIST[i].Tag
-		api.Host = AWS_ASSOCIATE_LIST[i].Host
-		api.Client = urlfetch.Client(cxt)
-		awsparams := map[string]string{
-			"ItemId":        params.Keyword,
-			"IdType":        "EAN",
-			"SearchIndex":   "All",
-			"ResponseGroup": awsSerachResponseGroup,
-		}
-		result, err := api.ItemLookupWithParams(awsparams)
-		if err == nil {
-			aws := new(ItemLookupResponse)
-			xml.Unmarshal([]byte(result), aws)
-			if aws.getStatus() == StatusRequestSuccessfully {
-				log.Infof(cxt, fmt.Sprintf("aws feeds %s", result))
-				obj := newProductViewModel(aws, "aws")
-				presenter.addViewModel(obj)
-			} else {
-				awsparams := map[string]string{
-					"ItemId":        params.Keyword,
-					"IdType":        "UPC",
-					"SearchIndex":   "All",
-					"ResponseGroup": awsSerachResponseGroup,
-				}
-				result, err := api.ItemLookupWithParams(awsparams)
-				if err == nil {
-					aws := new(ItemLookupResponse)
-					xml.Unmarshal([]byte(result), aws)
-					if aws.getStatus() == StatusRequestSuccessfully {
-						log.Infof(cxt, fmt.Sprintf("aws feeds %s", result))
-						obj := newProductViewModel(aws, "aws")
-						presenter.addViewModel(obj)
-					}
-				}
-			}
-		}
-	}
+	//cxt := appengine.NewContext(r)
+	//for i := 0; i < len(AWS_ASSOCIATE_LIST); i++ {
+	//	var api AmazonProductAPI
+	//	api.AccessKey = AWS_ACCESS_ID
+	//	api.SecretKey = AWS_SECURITY_KEY
+	//	api.AssociateTag = AWS_ASSOCIATE_LIST[i].Tag
+	//	api.Host = AWS_ASSOCIATE_LIST[i].Host
+	//	api.Client = urlfetch.Client(cxt)
+	//	awsparams := map[string]string{
+	//		"ItemId":        params.Keyword,
+	//		"IdType":        "EAN",
+	//		"SearchIndex":   "All",
+	//		"ResponseGroup": awsSerachResponseGroup,
+	//	}
+	//	result, err := api.ItemLookupWithParams(awsparams)
+	//	if err == nil {
+	//		aws := new(ItemLookupResponse)
+	//		xml.Unmarshal([]byte(result), aws)
+	//		if aws.getStatus() == StatusRequestSuccessfully {
+	//			log.Infof(cxt, fmt.Sprintf("aws feeds %s", result))
+	//			obj := newProductViewModel(aws, "aws")
+	//			presenter.addViewModel(obj)
+	//		} else {
+	//			awsparams := map[string]string{
+	//				"ItemId":        params.Keyword,
+	//				"IdType":        "UPC",
+	//				"SearchIndex":   "All",
+	//				"ResponseGroup": awsSerachResponseGroup,
+	//			}
+	//			result, err := api.ItemLookupWithParams(awsparams)
+	//			if err == nil {
+	//				aws := new(ItemLookupResponse)
+	//				xml.Unmarshal([]byte(result), aws)
+	//				if aws.getStatus() == StatusRequestSuccessfully {
+	//					log.Infof(cxt, fmt.Sprintf("aws feeds %s", result))
+	//					obj := newProductViewModel(aws, "aws")
+	//					presenter.addViewModel(obj)
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
 
 	close(ch)
 	go func() {
